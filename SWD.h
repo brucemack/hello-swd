@@ -1,15 +1,13 @@
 #ifndef _SWD_h
 #define _SWD_h
 
+#include <cstdint>
 #include <expected>
-#include <string>
-
-typedef unsigned int uint32_t;
-typedef unsigned char uint8_t;
 
 namespace kc1fsz {
 
 class SWD {
+
 public:
 
     // NOTE: Slave captures outbound data on the rising edge of the clock
@@ -20,11 +18,11 @@ public:
     void lineReset();
     void init();
 
-    std::expected<void, int> writeDP(uint8_t addr, uint32_t data) {
+    int writeDP(uint8_t addr, uint32_t data) {
         return _write(false, addr, data);
     }
 
-    std::expected<void, int> writeAP(uint8_t addr, uint32_t data) {
+    int writeAP(uint8_t addr, uint32_t data) {
         return _write(true, addr, data);
     }
 
@@ -38,7 +36,7 @@ public:
 
 protected:
 
-    std::expected<void, int> _write(bool isAP, uint8_t addr, uint32_t data);
+    int _write(bool isAP, uint8_t addr, uint32_t data);
     std::expected<uint32_t, int> _read(bool isAP, uint8_t addr);
 
     void _setCLK(bool h);

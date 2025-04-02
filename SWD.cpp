@@ -2,7 +2,12 @@
 
 namespace kc1fsz {
 
-std::expected<void, std::sring> SWD::_write(bool isAP, uint8_t addr, uint32_t data) {
+std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
+
+}
+
+
+int SWD::_write(bool isAP, uint8_t addr, uint32_t data) {
 
     // The only variable bits are the address and the DP/AP flag
     unsigned int ones = _countOnes(addr & 0b11);
@@ -41,7 +46,7 @@ std::expected<void, std::sring> SWD::_write(bool isAP, uint8_t addr, uint32_t da
     writeBit(false);
 
     if (ack != 1)
-        return std::unexpected(-1);
+        return -1;
 
     // Write data, LSB first
     ones = 0;
@@ -54,20 +59,9 @@ std::expected<void, std::sring> SWD::_write(bool isAP, uint8_t addr, uint32_t da
 
     // Write parity in order to make the one count even
     writeBit((ones % 2) == 1);
+
+    return 0;
 }
-
-void SWD::writeAP(uint8_t addr, uint32_t data) {
-
-}
-
-uint32_t SWD::readDP(uint8_t addr) {
-
-}
-
-uint32_t SWD::readAP(uint8_t addr) {
-
-}
-
 
 void SWD::writeBit(bool b) {
     _setCLK(true);
