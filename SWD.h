@@ -10,13 +10,19 @@ class SWD {
 
 public:
 
+    void init();
+
     // NOTE: Slave captures outbound data on the rising edge of the clock
     void writeBit(bool b);
     // NOTE: Master captures inbound data on the falling edge of the clock
     bool readBit();
 
-    void lineReset();
-    void init();
+    // Pattern is made up of "0", "1", and "_" (ignored)
+    void writeBitPattern(const char* pattern);
+
+    void writeLineReset();
+    void writeSelectionAlert();
+    void writeActivaionCode();
 
     int writeDP(uint8_t addr, uint32_t data) {
         return _write(false, addr, data);
@@ -33,6 +39,8 @@ public:
     std::expected<uint32_t, int> readAP(uint8_t addr) {
         return _read(true, addr);
     }
+
+
 
 protected:
 
