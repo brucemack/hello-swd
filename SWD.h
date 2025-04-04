@@ -23,6 +23,7 @@ public:
     void writeLineReset();
     void writeSelectionAlert();
     void writeActivaionCode();
+    void writeJTAGToDSConversion();
 
     int writeDP(uint8_t addr, uint32_t data) {
         return _write(false, addr, data);
@@ -40,7 +41,7 @@ public:
         return _read(true, addr);
     }
 
-
+    void setDIO(bool h) { _setDIO(h); }
 
 protected:
 
@@ -49,14 +50,12 @@ protected:
 
     void _setCLK(bool h);
     void _setDIO(bool h);
-    void _setDIOInput(bool b);
     bool _getDIO();
     void _holdDIO();
     void _releaseDIO();
     void _delaySetup();
     void _delayHold();
     void _delayPeriod();
-    unsigned int _countOnes(uint8_t b);
 };
 
 }

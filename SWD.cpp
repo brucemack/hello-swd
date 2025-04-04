@@ -1,4 +1,6 @@
 #include "SWD.h"
+#include "hardware/gpio.h"
+#include "pico/time.h"
 
 namespace kc1fsz {
 
@@ -7,10 +9,50 @@ static const char* SELECTION_ALERT = "0100_1001_1100_1111_1001_0000_0100_0110_10
 
 static const char* ACTIVATION_CODE = "0000_0101_1000_1111";
 
+// This is supposed to be AEEE_EEE6 (MSB first), but only the last 30 bits are used
+static const char* JTAG_TO_DS_CONVERSION = "1010_1110_1110_1110_1110_1110_1110_0110";
+
+#define CLK_PIN (2)
+#define DIO_PIN (3)
+
+void SWD::init() {
+    gpio_init(CLK_PIN);
+    gpio_set_dir(CLK_PIN, GPIO_OUT);        
+    gpio_put(CLK_PIN, 0);
+
+    gpio_init(DIO_PIN);
+    gpio_set_dir(DIO_PIN, GPIO_OUT);        
+    gpio_put(DIO_PIN, 0);
+}
+
+void SWD::_setCLK(bool h) {
+    gpio_put(CLK_PIN, h ? 1 : 0);
+}
+
+void SWD::_setDIO(bool h) {
+    gpio_put(DIO_PIN, h ? 1 : 0);    
+}
+
+bool SWD::_getDIO() {
+    return gpio_get(DIO_PIN) == 1;
+}
+
+void SWD::_holdDIO() {
+    gpio_set_dir(DIO_PIN, GPIO_OUT);                
+}
+
+void SWD::_releaseDIO() {
+    gpio_set_dir(DIO_PIN, GPIO_IN);                
+}
+
 std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
 
     // The only variable bits are the address and the DP/AP flag
-    unsigned int ones = _countOnes(addr & 0b11);
+    unsigned int ones = 0;
+    if (addr & 0b01)
+        ones++;
+    if (addr & 0b10)
+        ones++;
     if (isAP)
         ones++;
     // Read flag
@@ -72,7 +114,11 @@ std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
 int SWD::_write(bool isAP, uint8_t addr, uint32_t data) {
 
     // The only variable bits are the address and the DP/AP flag
-    unsigned int ones = _countOnes(addr & 0b11);
+    unsigned int ones = 0;
+    if (addr & 0b01)
+        ones++;
+    if (addr & 0b10)
+        ones++;
     if (isAP)
         ones++;
 
@@ -147,12 +193,13 @@ bool SWD::readBit() {
 
 void SWD::writeBitPattern(const char* pattern) {
     const char* b = pattern;
-    while (b != 0) {
+    while (*b != 0) {
         if (*b == '0') {
             writeBit(false);
         } else if (*b == '1') {
             writeBit(true);
         }
+        b++;
     }
 }
 
@@ -167,6 +214,22 @@ void SWD::writeSelectionAlert() {
 
 void SWD::writeActivaionCode() {
     writeBitPattern(ACTIVATION_CODE);
+}
+
+void SWD::writeJTAGToDSConversion() {
+    writeBitPattern(JTAG_TO_DS_CONVERSION);
+}
+
+void SWD::_delaySetup() {
+    sleep_us(25);
+}
+
+void SWD::_delayHold() {
+    sleep_us(25);
+}
+
+void SWD::_delayPeriod() {
+    sleep_us(500);
 }
 
 }
