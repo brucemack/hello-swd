@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "SWD.h"
 #include "hardware/gpio.h"
 #include "pico/time.h"
@@ -12,17 +13,17 @@ static const char* ACTIVATION_CODE = "0000_0101_1000_1111";
 // This is supposed to be AEEE_EEE6 (MSB first), but only the last 30 bits are used
 static const char* JTAG_TO_DS_CONVERSION = "1010_1110_1110_1110_1110_1110_1110_0110";
 
+
 #define CLK_PIN (2)
 #define DIO_PIN (3)
 
 void SWD::init() {
-    gpio_init(CLK_PIN);
     gpio_set_dir(CLK_PIN, GPIO_OUT);        
     gpio_put(CLK_PIN, 0);
 
-    gpio_init(DIO_PIN);
     gpio_set_dir(DIO_PIN, GPIO_OUT);        
     gpio_put(DIO_PIN, 0);
+    gpio_set_pulls(DIO_PIN, false, false);        
 }
 
 void SWD::_setCLK(bool h) {
@@ -42,6 +43,7 @@ void SWD::_holdDIO() {
 }
 
 void SWD::_releaseDIO() {
+    gpio_set_pulls(DIO_PIN, false, false);        
     gpio_set_dir(DIO_PIN, GPIO_IN);                
 }
 
@@ -72,12 +74,25 @@ std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
     writeBit((ones % 2) == 1);
     // Stop
     writeBit(false);
+
     // Park 
-    writeBit(true);
-    
-    // One cycle turnaround 
+    /*
+    _setDIO(true);
     _releaseDIO();
+    _delayPeriod();
+    _setCLK(true);
+    _delayPeriod();
+    _setCLK(false);
+    */
+
+    writeBit(true);
+    _releaseDIO();
+    _delayPeriod();
+
+    // One cycle turnaround 
     readBit();
+
+    _delayPeriod();
 
     // Read three bits (LSB first)
     uint8_t ack = 0;
@@ -85,11 +100,21 @@ std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
     if (readBit()) ack |= 2;
     if (readBit()) ack |= 4;
 
-    if (ack != 1) {
+    printf("_read() ACK %d\n", ack);
+
+    /*
+    // 0b001 is OK
+    if (ack != 0b001) {
         // TODO: DECIDE HOW TO DEAL WITH THIS
         _holdDIO();
         return std::unexpected(-1);
     }
+    else {
+        printf("_read() good ACK\n");
+    }
+    */
+
+    _delayPeriod();
 
     // Read data, LSB first
     uint32_t data = 0;
@@ -99,19 +124,25 @@ std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
         ones += (bit) ? 1 : 0;
         writeBit(bit);
         data = data >> 1;
-        data = data | (bit) ? 0x80000000 : 0;
+        data |= (bit) ? 0x80000000 : 0;
     }
+
+    _delayPeriod();
+
+    // Read parity
+    readBit();
+
+    _delayPeriod();
 
     // One cycle turnaround 
     _holdDIO();
     writeBit(false);
 
     return data;
-
 }
 
 
-int SWD::_write(bool isAP, uint8_t addr, uint32_t data) {
+int SWD::_write(bool isAP, uint8_t addr, uint32_t data, bool ignoreAck) {
 
     // The only variable bits are the address and the DP/AP flag
     unsigned int ones = 0;
@@ -136,12 +167,23 @@ int SWD::_write(bool isAP, uint8_t addr, uint32_t data) {
     writeBit((ones % 2) == 1);
     // Stop
     writeBit(false);
+    
     // Park 
+    /*
+    _releaseDIO();
+    _setCLK(true);
+    _delayPeriod();
+    _setCLK(false);
+    _delayPeriod();
+    */
     writeBit(true);
+    _releaseDIO();
+    _delayPeriod();
     
     // One cycle turnaround 
-    _releaseDIO();
     readBit();
+
+    _delayPeriod();
 
     // Read three bits (LSB first)
     uint8_t ack = 0;
@@ -153,8 +195,13 @@ int SWD::_write(bool isAP, uint8_t addr, uint32_t data) {
     _holdDIO();
     writeBit(false);
 
-    if (ack != 1)
-        return -1;
+    // 001 is OK
+    if (!ignoreAck) {
+        printf("_write() ACK %d\n", ack);
+        if (ack != 0b001) {
+            return -1;
+        }
+    }
 
     // Write data, LSB first
     ones = 0;
@@ -165,6 +212,8 @@ int SWD::_write(bool isAP, uint8_t addr, uint32_t data) {
         data = data >> 1;
     }
 
+    _delayPeriod();
+
     // Write parity in order to make the one count even
     writeBit((ones % 2) == 1);
 
@@ -172,21 +221,32 @@ int SWD::_write(bool isAP, uint8_t addr, uint32_t data) {
 }
 
 void SWD::writeBit(bool b) {
-    _setCLK(true);
+
+    // NEW
     _setDIO(b);
-    _delaySetup();
+    _delayPeriod();
+    _setCLK(true);
+    _delayPeriod();
     // Slave will capture the data on this falling edge
     _setCLK(false);
-    _delayHold();
+
+    /*    
+    _setCLK(true);
+    _setDIO(b);
     _delayPeriod();
+    // Slave will capture the data on this falling edge
+    _setCLK(false);
+    _delayPeriod();
+    */
 }
 
 bool SWD::readBit() {
-    // The slave will present the data on this rising edge
+    //bool r = _getDIO();
     _setCLK(true);
-    _delaySetup();
     bool r = _getDIO();
+    _delayPeriod();
     _setCLK(false);
+    // The slave will present the next data on this rising edge
     _delayPeriod();
     return r;
 }
@@ -220,16 +280,8 @@ void SWD::writeJTAGToDSConversion() {
     writeBitPattern(JTAG_TO_DS_CONVERSION);
 }
 
-void SWD::_delaySetup() {
-    sleep_us(25);
-}
-
-void SWD::_delayHold() {
-    sleep_us(25);
-}
-
 void SWD::_delayPeriod() {
-    sleep_us(500);
+    sleep_us(1);
 }
 
 }
