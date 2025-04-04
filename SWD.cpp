@@ -100,7 +100,7 @@ std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
     if (readBit()) ack |= 2;
     if (readBit()) ack |= 4;
 
-    printf("_read() ACK %d\n", ack);
+    //printf("_read() ACK %d\n", ack);
 
     /*
     // 0b001 is OK
@@ -122,7 +122,6 @@ std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
     for (unsigned int i = 0; i < 32; i++) {
         bool bit = readBit();
         ones += (bit) ? 1 : 0;
-        writeBit(bit);
         data = data >> 1;
         data |= (bit) ? 0x80000000 : 0;
     }
@@ -241,13 +240,13 @@ void SWD::writeBit(bool b) {
 }
 
 bool SWD::readBit() {
-    //bool r = _getDIO();
-    _setCLK(true);
+    _delayPeriod();
     bool r = _getDIO();
+    // The slave will present the next data on this rising edge
+    _setCLK(true);
+    //bool r = _getDIO();
     _delayPeriod();
     _setCLK(false);
-    // The slave will present the next data on this rising edge
-    _delayPeriod();
     return r;
 }
 
