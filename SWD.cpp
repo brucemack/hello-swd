@@ -92,6 +92,7 @@ std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
     // One cycle turnaround 
     readBit();
 
+    // IMPORTANT: For ease of display only!
     _delayPeriod();
 
     // Read three bits (LSB first)
@@ -100,20 +101,15 @@ std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
     if (readBit()) ack |= 2;
     if (readBit()) ack |= 4;
 
-    //printf("_read() ACK %d\n", ack);
 
-    /*
     // 0b001 is OK
     if (ack != 0b001) {
         // TODO: DECIDE HOW TO DEAL WITH THIS
         _holdDIO();
         return std::unexpected(-1);
     }
-    else {
-        printf("_read() good ACK\n");
-    }
-    */
 
+    // IMPORTANT: For ease of display only!
     _delayPeriod();
 
     // Read data, LSB first
@@ -126,6 +122,7 @@ std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
         data |= (bit) ? 0x80000000 : 0;
     }
 
+    // IMPORTANT: For ease of display only!
     _delayPeriod();
 
     // Read parity
@@ -167,21 +164,17 @@ int SWD::_write(bool isAP, uint8_t addr, uint32_t data, bool ignoreAck) {
     // Stop
     writeBit(false);
     
-    // Park 
-    /*
-    _releaseDIO();
-    _setCLK(true);
-    _delayPeriod();
-    _setCLK(false);
-    _delayPeriod();
-    */
+    // Park: drive the DIO high and leave it there
     writeBit(true);
     _releaseDIO();
+
+    // IMPORTANT: For ease of display/debug only
     _delayPeriod();
     
     // One cycle turnaround 
     readBit();
 
+    // IMPORTANT: For ease of display/debug only
     _delayPeriod();
 
     // Read three bits (LSB first)
@@ -211,6 +204,7 @@ int SWD::_write(bool isAP, uint8_t addr, uint32_t data, bool ignoreAck) {
         data = data >> 1;
     }
 
+    // IMPORTANT: For ease of display/debug only
     _delayPeriod();
 
     // Write parity in order to make the one count even
@@ -221,22 +215,14 @@ int SWD::_write(bool isAP, uint8_t addr, uint32_t data, bool ignoreAck) {
 
 void SWD::writeBit(bool b) {
 
-    // NEW
+    // Setup the outbound data
     _setDIO(b);
     _delayPeriod();
+    // Slave will capture the data on this rising edge
     _setCLK(true);
     _delayPeriod();
-    // Slave will capture the data on this falling edge
+    // Leave the clock low
     _setCLK(false);
-
-    /*    
-    _setCLK(true);
-    _setDIO(b);
-    _delayPeriod();
-    // Slave will capture the data on this falling edge
-    _setCLK(false);
-    _delayPeriod();
-    */
 }
 
 bool SWD::readBit() {
