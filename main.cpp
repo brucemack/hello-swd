@@ -113,24 +113,66 @@ int main(int, const char**) {
         printf("Status %X\n", *r);
     }
 
-    // Set AP bank F, DP bank 0
+    // DP SELECT - Set AP bank F, DP bank 0
+    // [31:24] AP Select
+    // [7:4]   AP Bank Select (the active four-word bank)
     if (const auto r = swd.writeDP(0b1000, 0x000000f0); r != 0) {
         printf("Fail5 %d\n", r);
         return -1;
     }
 
-    // Read AP addr 0xFC (actual data comes later)
-    if (const auto r = swd.readAP(0b1100); !r.has_value()) {
+    // Read AP addr 0xFC. [7:4] bank address set previously, [3:0] set here.
+    // 0xFC is the AP identification register.
+    // The actual data comes back during the DP RDBUFF read
+    if (const auto r = swd.readAP(0x0c); !r.has_value()) {
         printf("Fail6 %d\n", r.error());
         return -1;
     }
 
-    // Read AP result
-    if (const auto r = swd.readDP(0b1100); !r.has_value()) {
+    // DP RDBUFF - Read AP result
+    if (const auto r = swd.readDP(0xc); !r.has_value()) {
         printf("Fail7 %d\n", r.error());
         return -1;
     } else {
         printf("AP ID %X\n", *r);
+    }
+
+    // Write to the AP Control/Status Word (CSW), auto-increment, word values
+    //
+    // 1010_0010_0000_0000_0001_0010
+    // 
+    // [5:4] 01  : Auto Increment set to "Increment Single," which increments by the size of the access.
+    // [2:0] 010 : Size of the access to perform, which is 32 bits in this case. 
+    if (const auto r = swd.writeAP(0b0000, 0xa2000012); r != 0) {
+        printf("Fail8 %d\n", r);
+        return -1;
+    }
+
+    // DP SELECT - Set AP and DP bank 0
+    if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0) {
+        printf("Fail9 %d\n", r);
+        return -1;
+    }
+
+    // Read a 32-bit location
+
+    // Write to the AP TAR register. This is the memory address that we will 
+    // be reading/writing from/to.
+    if (const auto r = swd.writeAP(0b0100, 0x00000000); r != 0) {
+        printf("Fail10 %d\n", r);
+        return -1;
+    }
+    // Read from the AP DRW register (actual data comes later)
+    if (const auto r = swd.readAP(0xc); !r.has_value()) {
+        printf("Fail11 %d\n", r.error());
+        return -1;
+    }
+    // Fetch result of AP read
+    if (const auto r = swd.readDP(0xc); !r.has_value()) {
+        printf("Fai12 %d\n", r.error());
+        return -1;
+    } else {
+        printf("Data %X\n", *r);
     }
 
     while (true) {        

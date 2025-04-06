@@ -181,7 +181,7 @@ int SWD::_write(bool isAP, uint8_t addr, uint32_t data, bool ignoreAck) {
 
     // 001 is OK
     if (!ignoreAck) {
-        printf("_write() ACK %d\n", ack);
+        //printf("_write() ACK %d\n", ack);
         if (ack != 0b001) {
             return -1;
         }
