@@ -51,9 +51,9 @@ std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
 
     // The only variable bits are the address and the DP/AP flag
     unsigned int ones = 0;
-    if (addr & 0b01)
+    if (addr & 0b0100)
         ones++;
-    if (addr & 0b10)
+    if (addr & 0b1000)
         ones++;
     if (isAP)
         ones++;
@@ -66,9 +66,9 @@ std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
     writeBit(isAP);
     // 1=Read
     writeBit(true);
-    // Address[2:3] (LSB first)
-    writeBit((addr & 1) == 1);
-    writeBit((addr & 2) == 2);
+    // Address[3:2] (LSB first)
+    writeBit((addr & 0b0100) != 0);
+    writeBit((addr & 0b1000) != 0);
     // This system uses even parity, so an extra one should be 
     // added only if the rest of the count is odd.
     writeBit((ones % 2) == 1);
@@ -76,17 +76,9 @@ std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
     writeBit(false);
 
     // Park 
-    /*
-    _setDIO(true);
-    _releaseDIO();
-    _delayPeriod();
-    _setCLK(true);
-    _delayPeriod();
-    _setCLK(false);
-    */
-
     writeBit(true);
     _releaseDIO();
+
     _delayPeriod();
 
     // One cycle turnaround 
@@ -142,9 +134,9 @@ int SWD::_write(bool isAP, uint8_t addr, uint32_t data, bool ignoreAck) {
 
     // The only variable bits are the address and the DP/AP flag
     unsigned int ones = 0;
-    if (addr & 0b01)
+    if (addr & 0b0100)
         ones++;
-    if (addr & 0b10)
+    if (addr & 0b1000)
         ones++;
     if (isAP)
         ones++;
@@ -155,9 +147,9 @@ int SWD::_write(bool isAP, uint8_t addr, uint32_t data, bool ignoreAck) {
     writeBit(isAP);
     // 0=Write
     writeBit(false);
-    // Address[2:3] (LSB first)
-    writeBit((addr & 1) == 1);
-    writeBit((addr & 2) == 2);
+    // Address[3:2] (LSB first)
+    writeBit((addr & 0b0100) != 0);
+    writeBit((addr & 0b1000) != 0);
     // This system uses even parity, so an extra one should be 
     // added only if the rest of the count is odd.
     writeBit((ones % 2) == 1);
@@ -214,23 +206,21 @@ int SWD::_write(bool isAP, uint8_t addr, uint32_t data, bool ignoreAck) {
 }
 
 void SWD::writeBit(bool b) {
-
     // Setup the outbound data
     _setDIO(b);
     _delayPeriod();
     // Slave will capture the data on this rising edge
     _setCLK(true);
     _delayPeriod();
-    // Leave the clock low
     _setCLK(false);
 }
 
 bool SWD::readBit() {
+    // NOTE: This makes it look like the data is already setup by the previous
+    // falling clock edge?
     _delayPeriod();
     bool r = _getDIO();
-    // The slave will present the next data on this rising edge
     _setCLK(true);
-    //bool r = _getDIO();
     _delayPeriod();
     _setCLK(false);
     return r;
@@ -267,6 +257,7 @@ void SWD::writeJTAGToDSConversion() {
 
 void SWD::_delayPeriod() {
     sleep_us(1);
+    //busy_wait_us_32(1);9999999
 }
 
 }

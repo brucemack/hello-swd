@@ -12,7 +12,6 @@ const uint LED_PIN = 25;
 #define CLK_PIN (2)
 #define DIO_PIN (3)
 
-
 int main(int, const char**) {
 
     stdio_init_all();
@@ -69,18 +68,69 @@ int main(int, const char**) {
     sleep_us(150);
 
     // DP TARGETSEL, DP for Core 0.  We ignore the ACK here
-    if (const auto r = swd.writeDP(0b11, 0x01002927, true); r != 0) {
+    if (const auto r = swd.writeDP(0b1100, 0x01002927, true); r != 0) {
         printf("DP TARGETSEL write failed %d\n", r);
+        return -1;
     }
+
+    // Delay with CLK=0/DIO=0
+    swd.setDIO(false);
+    sleep_us(732);
+
+    // Read the ID code
+    if (const auto r = swd.readDP(0b0000); r.has_value())
+      printf("IDCODE Value %X\n", *r);
     else {
-        // Delay with CLK=0/DIO=0
-        swd.setDIO(false);
-        sleep_us(732);
-        // Read the ID code
-        if (const auto r = swd.readDP(0b00); r.has_value())
-            printf("Value %X\n", *r);
-        else
-            printf("ERROR %d\n", r.error());
+        printf("ERROR %d\n", r.error());
+        return -1;
+    }
+
+    // FOLLOWING PICOREG
+
+    // Abort
+    if (const auto r = swd.writeDP(0b0000, 0x0000001e); r != 0) {
+        printf("Fail1 %d\n", r);
+        return -1;
+    }
+
+    // Set AP and DP bank 0
+    if (const auto r = swd.writeDP(0b1000, 0x00000000); r != 0) {
+        printf("Fail2 %d\n", r);
+        return -1;
+    }
+
+    // Power up
+    if (const auto r = swd.writeDP(0b0100, 0x50000001); r != 0) {
+        printf("Fail3 %d\n", r);
+        return -1;
+    }
+
+    // Read status
+    if (const auto r = swd.readDP(0b0100); !r.has_value()) {
+        printf("Fail4 %d\n", r.error());
+        return -1;
+    } else {
+        printf("Status %X\n", *r);
+    }
+
+    // Set AP bank F, DP bank 0
+    if (const auto r = swd.writeDP(0b1000, 0x000000f0); r != 0) {
+        printf("Fail5 %d\n", r);
+        return -1;
+    }
+
+    // Read AP addr 0xFC (actual data comes later)
+    if (const auto r = swd.readAP(0b1100); !r.has_value()) {
+        printf("Fail6 %d\n", r.error());
+        return -1;
+    }
+
+    // Read AP result
+    if (const auto r = swd.readDP(0b1100); !r.has_value()) {
+        printf("Fail7 %d\n", r.error());
+        return -1;
+    } else {
+        printf("AP ID %X\n", *r);
     }
 
     while (true) {        
