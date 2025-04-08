@@ -49,6 +49,7 @@ Debug: 48 38 command.c:153 script_debug(): command - transport init
 Debug: 49 38 transport.c:219 handle_transport_init(): handle_transport_init
 Debug: 50 38 command.c:153 script_debug(): command - dap init
 Debug: 51 38 arm_dap.c:96 dap_init_all(): Initializing all DAPs ...
+
 Debug: 52 38 arm_dap.c:120 dap_init_all(): DAP rp2040.cpu configured by default to use ADIv5 protocol
 Debug: 53 38 cmsis_dap.c:1257 cmsis_dap_swd_switch_seq(): JTAG-to-DORMANT
 Debug: 54 39 cmsis_dap.c:1272 cmsis_dap_swd_switch_seq(): DORMANT-to-SWD
@@ -58,7 +59,9 @@ Debug: 57 42 arm_adi_v5.c:814 dap_dp_init(): DAP: wait CDBGPWRUPACK
 Debug: 58 42 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x20000000, value 0x20000000
 Debug: 59 42 arm_adi_v5.c:822 dap_dp_init(): DAP: wait CSYSPWRUPACK
 Debug: 60 43 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x80000000, value 0x80000000
+
 Debug: 61 43 cmsis_dap.c:845 cmsis_dap_swd_write_from_queue(): refusing to enable sticky overrun detection
+
 Debug: 62 44 arm_dap.c:120 dap_init_all(): DAP rp2040.cpu configured by default to use ADIv5 protocol
 Info : 63 46 adi_v5_swd.c:346 swd_connect_multidrop(): SWD DPIDR 0x0bc12477, DLPIDR 0x10000001
 Debug: 64 46 arm_adi_v5.c:783 dap_dp_init(): rp2040.dap1
@@ -67,6 +70,7 @@ Debug: 66 46 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x200000
 Debug: 67 48 arm_adi_v5.c:822 dap_dp_init(): DAP: wait CSYSPWRUPACK
 Debug: 68 48 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x80000000, value 0x80000000
 Debug: 69 49 cmsis_dap.c:845 cmsis_dap_swd_write_from_queue(): refusing to enable sticky overrun detection
+
 Debug: 70 51 openocd.c:150 handle_init_command(): Examining targets...
 Debug: 71 51 target.c:675 target_examine_one(): [rp2040.core0] Examination started
 Debug: 72 51 target.c:1775 target_call_event_callbacks(): target event 19 (examine-start) for core rp2040.core0
@@ -120,6 +124,7 @@ Debug: 119 83 cortex_m.c:2418 cortex_m_dwt_setup(): [rp2040.core1] DWT dwtcr 0x2
 Info : 120 83 cortex_m.c:2688 cortex_m_examine(): [rp2040.core1] target has 4 breakpoints, 2 watchpoints
 Debug: 121 83 target.c:1775 target_call_event_callbacks(): target event 21 (examine-end) for core rp2040.core1
 Info : 122 83 target.c:691 target_examine_one(): [rp2040.core1] Examination succeed
+
 Debug: 123 84 command.c:153 script_debug(): command - flash init
 Debug: 124 84 tcl.c:1364 handle_flash_init_command(): Initializing flash devices...
 Debug: 125 84 command.c:153 script_debug(): command - nand init
@@ -529,16 +534,54 @@ Debug: 469 520 rp2040.c:449 rp2xxx_call_rom_func_batch(): Using algo: rp2xxx_rom
 Debug: 470 520 target.c:2345 target_write_buffer(): writing buffer of 32 byte at 0x20010400
 Debug: 471 521 target.c:2345 target_write_buffer(): writing buffer of 48 byte at 0x20010420
 Debug: 472 522 target.c:2651 target_write_u32(): address: 0x20010450, value: 0x00000000
+
+>>>> This is the OpenOCD target event that is fired just before a target is resumed.
+
 Debug: 473 523 target.c:1775 target_call_event_callbacks(): target event 3 (resume-start) for core rp2040.core0
 Debug: 474 524 armv7m.c:174 armv7m_restore_context():  
+
+>>>> ARM architecture has Priority Mask, Fault Mask, Base Priority Mask, and Control registers.
+>>>> It's a bit confusing becaue the next log message makes it look like this is a single
+>>>> register write.
+>>>>
+>>>> See the documentation on the DCRSR for an explaination of this case. It appears that 
+>>>> the debug access to these four special-purpose registers via a "packed" access to a 
+>>>> single location (0b10100).  This is a "4 in 1 SFR".  Note that not all parts are implemented
+>>>> in the ARMv6 architecture.
+>>>>
+>>>>   [31:24] Control, [23:16] Fault Mask, [15:8] Base Priority Mask, [7:0] Priority Mask
+>>>> 
+>>>> So when a 0x00000001 is written, this is just setting the PRIMASK to 1, which disables 
+>>>> all exceptions of configurable priority. Thsi means that only MNI, Hardfaiult, and reset 
+>>>> exceptions are allowed.
+
 Debug: 475 525 armv7m.c:441 armv7m_write_core_reg(): write pmsk_bpri_fltmsk_ctrl value 0x00000001
+
+>>>> Here we are writing EPSR.T, which indicates whether the processor is in the Thumb State. "Updates to the PC
+>>>> that comply with the Thumb instruction interworking rules must update ESPR.T accordingly."
+
 Debug: 476 526 armv7m.c:441 armv7m_write_core_reg(): write xpsr value 0x01000000
+
+>>>> Update the program counter:
+
 Debug: 477 527 armv7m.c:441 armv7m_write_core_reg(): write pc value 0x20010400
+
 Debug: 478 527 target.c:1775 target_call_event_callbacks(): target event 18 (debug-resumed) for core rp2040.core0
 Debug: 479 528 cortex_m.c:1384 cortex_m_resume(): [rp2040.core0] debug resumed at 0x20010400
+
 Debug: 480 528 target.c:1775 target_call_event_callbacks(): target event 4 (resume-end) for core rp2040.core0
 Debug: 481 528 cortex_m.c:809 cortex_m_debug_entry(): [rp2040.core0]  
+
+>>>> Updates debug halt mask (clears the step flag)
+
+>>>> Reads and writes the Debug Fault Status Register (0xE000ED30) in order to clear any flags
+>>>> NVIC is from E000E100 to E000ECFF, so this is may not really anything to do with the NVIC.
+>>>> The SCS debug control and configuration is from E000EDF0
+>>>> [1] is the BKPT flag, indicates that a breakpoint was hit 
+>>>> [0] is the HALTED flag, indciates that a halt was requested by the DAP
+
 Debug: 482 531 cortex_m.c:550 cortex_m_clear_halt(): [rp2040.core0] NVIC_DFSR 0x3
+
 Debug: 483 544 cortex_m.c:352 cortex_m_fast_read_all_regs(): [rp2040.core0] read 20 32-bit registers
 Debug: 484 544 cortex_m.c:879 cortex_m_debug_entry(): [rp2040.core0] entered debug state in core mode: Thread at PC 0x2001041e, cpu in Non-Secure state, target->state: halted
 Debug: 485 544 target.c:1775 target_call_event_callbacks(): target event 17 (debug-halted) for core rp2040.core0
@@ -770,6 +813,9 @@ Debug: 688 5933 target.c:2102 target_free_working_area_restore(): freed 63488 by
 Debug: 689 5933 target.c:1901 print_wa_layout(): b* 0x20010000-0x200103ff (1024 bytes)
 Debug: 690 5933 target.c:1901 print_wa_layout(): b* 0x20010400-0x200107ff (1024 bytes)
 Debug: 691 5933 target.c:1901 print_wa_layout(): b  0x20010800-0x2001ffff (63488 bytes)
+
+>>>> ROM function at 0x2361 is "FC"  _flash_flush_cache()
+
 Debug: 692 5933 rp2040.c:784 rp2040_flash_write(): Flushing flash cache after write behind
 Debug: 693 5933 rp2040.c:428 rp2xxx_call_rom_func_batch(): Calling batch of 1 ROM functions:
 Debug: 694 5933 rp2040.c:430 rp2xxx_call_rom_func_batch():   func @ 2361
@@ -821,6 +867,11 @@ Debug: 739 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register r3 with
 Debug: 740 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register r2 with value 0xffffffff
 Debug: 741 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register r1 with value 0xffffffff
 Debug: 742 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register r0 with value 0xffffffff
+
+
+>>>> ROM function at 0x2361 is "FC"  _flash_flush_cache()
+>>>> ROM function at 0x2331 is "CX" _flash_enter_cmd_xip()
+
 Debug: 743 5967 rp2040.c:428 rp2xxx_call_rom_func_batch(): Calling batch of 2 ROM functions:
 Debug: 744 5967 rp2040.c:430 rp2xxx_call_rom_func_batch():   func @ 2361
 Debug: 745 5967 rp2040.c:431 rp2xxx_call_rom_func_batch():     sp = 20010400
@@ -876,6 +927,7 @@ Debug: 794 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register r3 with
 Debug: 795 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register r2 with value 0xffffffff
 Debug: 796 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register r1 with value 0xffffffff
 Debug: 797 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register r0 with value 0xffffffff
+
 Debug: 798 6002 rp2040.c:712 cleanup_after_raw_flash_cmd(): Cleaning up after flash operations
 Debug: 799 6032 target.c:2102 target_free_working_area_restore(): freed 1024 bytes of working area at address 0x20010000
 Debug: 800 6032 target.c:1901 print_wa_layout(): b  0x20010000-0x200103ff (1024 bytes)
@@ -886,6 +938,9 @@ Debug: 804 6061 target.c:1901 print_wa_layout():    0x20010000-0x2001ffff (65536
 Debug: 805 6061 command.c:153 script_debug(): command - echo ** Programming Finished **
 Debug: 806 6061 log.c:408 gdb_timeout_warning(): keep_alive() was not invoked in the 1000 ms timelimit (1916 ms). This may cause trouble with GDB connections.
 User : 807 6066 command.c:678 handle_echo(): ** Programming Finished **
+
+========================================================================================================
+
 Debug: 808 6066 command.c:153 script_debug(): command - echo ** Verify Started **
 User : 809 6066 command.c:678 handle_echo(): ** Verify Started **
 Debug: 810 6066 command.c:153 script_debug(): command - verify_image main.elf
@@ -901,6 +956,7 @@ Debug: 819 6066 target.c:2034 target_alloc_working_area_try(): allocated new wor
 Debug: 820 6071 target.c:1901 print_wa_layout(): b* 0x20010000-0x20010033 (52 bytes)
 Debug: 821 6071 target.c:1901 print_wa_layout():    0x20010034-0x2001ffff (65484 bytes)
 Debug: 822 6071 target.c:2345 target_write_buffer(): writing buffer of 52 byte at 0x20010000
+
 Debug: 823 6073 target.c:1775 target_call_event_callbacks(): target event 3 (resume-start) for core rp2040.core0
 Debug: 824 6073 armv7m.c:174 armv7m_restore_context():  
 Debug: 825 6074 armv7m.c:441 armv7m_write_core_reg(): write pmsk_bpri_fltmsk_ctrl value 0x00000001
@@ -922,6 +978,7 @@ Debug: 840 6087 target.c:1775 target_call_event_callbacks(): target event 4 (res
 Debug: 841 6088 target.c:3224 target_wait_state(): waiting for target halted...
 Debug: 842 6136 cortex_m.c:809 cortex_m_debug_entry(): [rp2040.core0]  
 Debug: 843 6139 cortex_m.c:550 cortex_m_clear_halt(): [rp2040.core0] NVIC_DFSR 0x3
+
 Debug: 844 6151 cortex_m.c:352 cortex_m_fast_read_all_regs(): [rp2040.core0] read 20 32-bit registers
 Debug: 845 6151 cortex_m.c:879 cortex_m_debug_entry(): [rp2040.core0] entered debug state in core mode: Thread at PC 0x2001002e, cpu in Non-Secure state, target->state: halted
 Debug: 846 6151 target.c:1775 target_call_event_callbacks(): target event 17 (debug-halted) for core rp2040.core0
@@ -936,6 +993,7 @@ Debug: 854 6151 armv7m.c:704 armv7m_wait_algorithm(): restoring register r3 with
 Debug: 855 6151 armv7m.c:704 armv7m_wait_algorithm(): restoring register r2 with value 0xffffffff
 Debug: 856 6151 armv7m.c:704 armv7m_wait_algorithm(): restoring register r1 with value 0xffffffff
 Debug: 857 6151 armv7m.c:704 armv7m_wait_algorithm(): restoring register r0 with value 0xffffffff
+
 Debug: 858 6153 target.c:2102 target_free_working_area_restore(): freed 52 bytes of working area at address 0x20010000
 Debug: 859 6153 target.c:1901 print_wa_layout():    0x20010000-0x2001ffff (65536 bytes)
 Debug: 860 6153 image.c:667 image_elf32_read_section(): load segment 1 at 0x0 (sz = 0xfc8)
@@ -965,6 +1023,7 @@ Debug: 883 6169 target.c:3224 target_wait_state(): waiting for target halted...
 Debug: 884 6174 cortex_m.c:809 cortex_m_debug_entry(): [rp2040.core0]  
 Debug: 885 6177 cortex_m.c:550 cortex_m_clear_halt(): [rp2040.core0] NVIC_DFSR 0x3
 Debug: 886 6189 cortex_m.c:352 cortex_m_fast_read_all_regs(): [rp2040.core0] read 20 32-bit registers
+
 Debug: 887 6189 cortex_m.c:879 cortex_m_debug_entry(): [rp2040.core0] entered debug state in core mode: Thread at PC 0x2001002e, cpu in Non-Secure state, target->state: halted
 Debug: 888 6189 target.c:1775 target_call_event_callbacks(): target event 17 (debug-halted) for core rp2040.core0
 Debug: 889 6189 armv7m.c:704 armv7m_wait_algorithm(): restoring register primask with value 0x00000000
@@ -982,6 +1041,7 @@ Debug: 900 6191 target.c:2102 target_free_working_area_restore(): freed 52 bytes
 Debug: 901 6191 target.c:1901 print_wa_layout():    0x20010000-0x2001ffff (65536 bytes)
 Debug: 902 6191 command.c:153 script_debug(): command - echo ** Verified OK **
 User : 903 6196 command.c:678 handle_echo(): ** Verified OK **
+
 Debug: 904 6196 command.c:153 script_debug(): command - poll off
 Debug: 905 6196 command.c:153 script_debug(): command - echo ** Resetting Target **
 User : 906 6196 command.c:678 handle_echo(): ** Resetting Target **
@@ -1010,6 +1070,7 @@ Debug: 928 6204 target.c:2131 target_free_all_working_areas_restore(): freeing a
 Debug: 929 6204 target.c:1901 print_wa_layout():    0x20010000-0x2001ffff (65536 bytes)
 Debug: 930 6204 cortex_m.c:1593 cortex_m_assert_reset(): [rp2040.core0] target->state: halted, examined
 Debug: 931 6211 cortex_m.c:550 cortex_m_clear_halt(): [rp2040.core0] NVIC_DFSR 0x1
+
 Debug: 932 6212 cortex_m.c:1708 cortex_m_assert_reset(): [rp2040.core0] Using Cortex-M SYSRESETREQ
 Debug: 933 6213 arm_adi_v5.c:857 dap_dp_init_or_reconnect(): rp2040.dap0
 Debug: 934 6214 arm_adi_v5.c:783 dap_dp_init(): rp2040.dap0
