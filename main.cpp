@@ -158,7 +158,7 @@ int main(int, const char**) {
 
     // Write to the AP TAR register. This is the memory address that we will 
     // be reading/writing from/to.
-    if (const auto r = swd.writeAP(0b0100, 0x00000000); r != 0) {
+    if (const auto r = swd.writeAP(0b0100, 0x00000010); r != 0) {
         printf("Fail10 %d\n", r);
         return -1;
     }

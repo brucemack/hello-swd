@@ -1,0 +1,1007 @@
+Open On-Chip Debugger 0.12.0+dev-gebec9504d (2025-01-18-10:58)
+Licensed under GNU GPL v2
+For bug reports, read
+	http://openocd.org/doc/doxygen/bugs.html
+Info : Hardware thread awareness created
+Info : Hardware thread awareness created
+adapter speed: 500 kHz
+User : 7 2 options.c:52 configuration_output_handler(): debug_level: 3User : 8 2 options.c:52 configuration_output_handler(): 
+Debug: 9 2 command.c:153 script_debug(): command - init
+Debug: 10 2 command.c:153 script_debug(): command - target init
+Debug: 11 2 command.c:153 script_debug(): command - target names
+Debug: 12 3 command.c:153 script_debug(): command - rp2040.core0 cget -event gdb-flash-erase-start
+Debug: 13 3 command.c:153 script_debug(): command - rp2040.core0 configure -event gdb-flash-erase-start reset init
+Debug: 14 3 command.c:153 script_debug(): command - rp2040.core0 cget -event gdb-flash-write-end
+Debug: 15 3 command.c:153 script_debug(): command - rp2040.core0 configure -event gdb-flash-write-end reset halt
+Debug: 16 3 command.c:153 script_debug(): command - rp2040.core0 cget -event gdb-attach
+Debug: 17 3 command.c:153 script_debug(): command - rp2040.core0 configure -event gdb-attach halt 1000
+Debug: 18 3 command.c:153 script_debug(): command - rp2040.core1 cget -event gdb-flash-erase-start
+Debug: 19 3 command.c:153 script_debug(): command - rp2040.core1 configure -event gdb-flash-erase-start reset init
+Debug: 20 3 command.c:153 script_debug(): command - rp2040.core1 cget -event gdb-flash-write-end
+Debug: 21 3 command.c:153 script_debug(): command - rp2040.core1 configure -event gdb-flash-write-end reset halt
+Debug: 22 3 command.c:153 script_debug(): command - rp2040.core1 cget -event gdb-attach
+Debug: 23 3 command.c:153 script_debug(): command - rp2040.core1 configure -event gdb-attach halt 1000
+Debug: 24 3 target.c:1589 handle_target_init_command(): Initializing targets...
+Debug: 25 3 semihosting_common.c:107 semihosting_common_init():  
+Debug: 26 3 semihosting_common.c:107 semihosting_common_init():  
+Debug: 27 9 cmsis_dap_usb_bulk.c:124 cmsis_dap_usb_open(): could not open device 0x1d6b:0x0003: Access denied (insufficient permissions)
+Debug: 28 19 cmsis_dap_usb_bulk.c:169 cmsis_dap_usb_open(): found product string of 0x2e8a:0x000c 'Debug Probe (CMSIS-DAP)'
+Debug: 29 19 cmsis_dap_usb_bulk.c:189 cmsis_dap_usb_open(): enumerating interfaces of 0x2e8a:0x000c
+Debug: 30 25 cmsis_dap_usb_bulk.c:236 cmsis_dap_usb_open(): found interface 0 string 'CMSIS-DAP v2 Interface'
+Info : 31 26 cmsis_dap_usb_bulk.c:339 cmsis_dap_usb_open(): Using CMSIS-DAPv2 interface with VID:PID=0x2e8a:0x000c, serial=E662588817913E2B
+Debug: 32 37 cmsis_dap_usb_bulk.c:508 cmsis_dap_usb_read(): USB timeout @ 0
+Info : 33 37 cmsis_dap.c:1174 cmsis_dap_get_caps_info(): CMSIS-DAP: SWD supported
+Info : 34 37 cmsis_dap.c:1174 cmsis_dap_get_caps_info(): CMSIS-DAP: Atomic commands supported
+Info : 35 37 cmsis_dap.c:1174 cmsis_dap_get_caps_info(): CMSIS-DAP: Test domain timer supported
+Info : 36 37 cmsis_dap.c:1151 cmsis_dap_get_version_info(): CMSIS-DAP: FW Version = 2.0.0
+Info : 37 37 cmsis_dap.c:1308 cmsis_dap_swd_open(): CMSIS-DAP: Interface Initialised (SWD)
+Debug: 38 37 cmsis_dap.c:1393 cmsis_dap_init(): CMSIS-DAP: Packet Count = 2
+Debug: 39 37 cmsis_dap.c:1396 cmsis_dap_init(): Allocating FIFO for 2 pending packets
+Info : 40 38 cmsis_dap.c:1207 cmsis_dap_get_status(): SWCLK/TCK = 0 SWDIO/TMS = 0 TDI = 0 TDO = 0 nTRST = 0 nRESET = 0
+Info : 41 38 cmsis_dap.c:1448 cmsis_dap_init(): CMSIS-DAP: Interface ready
+Debug: 42 38 adapter.c:214 adapter_khz_to_speed(): convert khz to adapter specific speed value
+Debug: 43 38 adapter.c:218 adapter_khz_to_speed(): have adapter set up
+Debug: 44 38 adapter.c:214 adapter_khz_to_speed(): convert khz to adapter specific speed value
+Debug: 45 38 adapter.c:218 adapter_khz_to_speed(): have adapter set up
+Info : 46 38 adapter.c:178 adapter_init(): clock speed 500 kHz
+Debug: 47 38 openocd.c:133 handle_init_command(): Debug Adapter init complete
+Debug: 48 38 command.c:153 script_debug(): command - transport init
+Debug: 49 38 transport.c:219 handle_transport_init(): handle_transport_init
+Debug: 50 38 command.c:153 script_debug(): command - dap init
+Debug: 51 38 arm_dap.c:96 dap_init_all(): Initializing all DAPs ...
+Debug: 52 38 arm_dap.c:120 dap_init_all(): DAP rp2040.cpu configured by default to use ADIv5 protocol
+Debug: 53 38 cmsis_dap.c:1257 cmsis_dap_swd_switch_seq(): JTAG-to-DORMANT
+Debug: 54 39 cmsis_dap.c:1272 cmsis_dap_swd_switch_seq(): DORMANT-to-SWD
+Info : 55 41 adi_v5_swd.c:346 swd_connect_multidrop(): SWD DPIDR 0x0bc12477, DLPIDR 0x00000001
+Debug: 56 42 arm_adi_v5.c:783 dap_dp_init(): rp2040.dap0
+Debug: 57 42 arm_adi_v5.c:814 dap_dp_init(): DAP: wait CDBGPWRUPACK
+Debug: 58 42 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x20000000, value 0x20000000
+Debug: 59 42 arm_adi_v5.c:822 dap_dp_init(): DAP: wait CSYSPWRUPACK
+Debug: 60 43 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x80000000, value 0x80000000
+Debug: 61 43 cmsis_dap.c:845 cmsis_dap_swd_write_from_queue(): refusing to enable sticky overrun detection
+Debug: 62 44 arm_dap.c:120 dap_init_all(): DAP rp2040.cpu configured by default to use ADIv5 protocol
+Info : 63 46 adi_v5_swd.c:346 swd_connect_multidrop(): SWD DPIDR 0x0bc12477, DLPIDR 0x10000001
+Debug: 64 46 arm_adi_v5.c:783 dap_dp_init(): rp2040.dap1
+Debug: 65 46 arm_adi_v5.c:814 dap_dp_init(): DAP: wait CDBGPWRUPACK
+Debug: 66 46 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x20000000, value 0x20000000
+Debug: 67 48 arm_adi_v5.c:822 dap_dp_init(): DAP: wait CSYSPWRUPACK
+Debug: 68 48 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x80000000, value 0x80000000
+Debug: 69 49 cmsis_dap.c:845 cmsis_dap_swd_write_from_queue(): refusing to enable sticky overrun detection
+Debug: 70 51 openocd.c:150 handle_init_command(): Examining targets...
+Debug: 71 51 target.c:675 target_examine_one(): [rp2040.core0] Examination started
+Debug: 72 51 target.c:1775 target_call_event_callbacks(): target event 19 (examine-start) for core rp2040.core0
+Debug: 73 51 arm_adi_v5.c:1192 dap_get_ap(): refcount AP#0x0 get 1
+Debug: 74 54 arm_adi_v5.c:1135 dap_find_get_ap(): Found MEM-AP AHB3 at AP index: 0 (IDR=0x04770031)
+Debug: 75 55 arm_adi_v5.c:933 mem_ap_init(): MEM_AP CFG: large data 0, long address 0, big-endian 0
+Debug: 76 56 target.c:2563 target_read_u32(): address: 0xe000ed00, value: 0x410cc601
+Info : 77 56 cortex_m.c:2547 cortex_m_examine(): [rp2040.core0] Cortex-M0+ r0p1 processor detected
+Debug: 78 56 cortex_m.c:2562 cortex_m_examine(): [rp2040.core0] cpuid: 0x410cc601
+Debug: 79 57 target.c:2563 target_read_u32(): address: 0xe000edf0, value: 0x00030003
+Debug: 80 57 target.c:2651 target_write_u32(): address: 0xe000edfc, value: 0x01000000
+Debug: 81 59 target.c:2563 target_read_u32(): address: 0xe0002000, value: 0x00000041
+Debug: 82 59 target.c:2651 target_write_u32(): address: 0xe0002008, value: 0x00000000
+Debug: 83 60 target.c:2651 target_write_u32(): address: 0xe000200c, value: 0x00000000
+Debug: 84 61 target.c:2651 target_write_u32(): address: 0xe0002010, value: 0x00000000
+Debug: 85 62 target.c:2651 target_write_u32(): address: 0xe0002014, value: 0x00000000
+Debug: 86 64 cortex_m.c:2678 cortex_m_examine(): [rp2040.core0] FPB fpcr 0x41, numcode 4, numlit 0
+Debug: 87 64 target.c:2563 target_read_u32(): address: 0xe0001000, value: 0x20000000
+Debug: 88 64 cortex_m.c:2364 cortex_m_dwt_setup(): [rp2040.core0] DWT_CTRL: 0x20000000
+Debug: 89 65 target.c:2563 target_read_u32(): address: 0xe0001fbc, value: 0x00000000
+Debug: 90 65 cortex_m.c:2371 cortex_m_dwt_setup(): [rp2040.core0] DWT_DEVARCH: 0x0
+Debug: 91 65 target.c:2651 target_write_u32(): address: 0xe0001028, value: 0x00000000
+Debug: 92 67 target.c:2651 target_write_u32(): address: 0xe0001038, value: 0x00000000
+Debug: 93 67 cortex_m.c:2418 cortex_m_dwt_setup(): [rp2040.core0] DWT dwtcr 0x20000000, comp 2, watch/trigger
+Info : 94 67 cortex_m.c:2688 cortex_m_examine(): [rp2040.core0] target has 4 breakpoints, 2 watchpoints
+Debug: 95 67 target.c:1775 target_call_event_callbacks(): target event 21 (examine-end) for core rp2040.core0
+Info : 96 67 target.c:691 target_examine_one(): [rp2040.core0] Examination succeed
+Debug: 97 67 target.c:675 target_examine_one(): [rp2040.core1] Examination started
+Debug: 98 68 target.c:1775 target_call_event_callbacks(): target event 19 (examine-start) for core rp2040.core1
+Debug: 99 68 arm_adi_v5.c:1192 dap_get_ap(): refcount AP#0x0 get 1
+Debug: 100 70 arm_adi_v5.c:1135 dap_find_get_ap(): Found MEM-AP AHB3 at AP index: 0 (IDR=0x04770031)
+Debug: 101 71 arm_adi_v5.c:933 mem_ap_init(): MEM_AP CFG: large data 0, long address 0, big-endian 0
+Debug: 102 72 target.c:2563 target_read_u32(): address: 0xe000ed00, value: 0x410cc601
+Info : 103 72 cortex_m.c:2547 cortex_m_examine(): [rp2040.core1] Cortex-M0+ r0p1 processor detected
+Debug: 104 72 cortex_m.c:2562 cortex_m_examine(): [rp2040.core1] cpuid: 0x410cc601
+Debug: 105 73 target.c:2563 target_read_u32(): address: 0xe000edf0, value: 0x00030003
+Debug: 106 73 target.c:2651 target_write_u32(): address: 0xe000edfc, value: 0x01000000
+Debug: 107 75 target.c:2563 target_read_u32(): address: 0xe0002000, value: 0x00000041
+Debug: 108 76 target.c:2651 target_write_u32(): address: 0xe0002008, value: 0x00000000
+Debug: 109 76 target.c:2651 target_write_u32(): address: 0xe000200c, value: 0x00000000
+Debug: 110 78 target.c:2651 target_write_u32(): address: 0xe0002010, value: 0x00000000
+Debug: 111 78 target.c:2651 target_write_u32(): address: 0xe0002014, value: 0x00000000
+Debug: 112 79 cortex_m.c:2678 cortex_m_examine(): [rp2040.core1] FPB fpcr 0x41, numcode 4, numlit 0
+Debug: 113 80 target.c:2563 target_read_u32(): address: 0xe0001000, value: 0x20000000
+Debug: 114 80 cortex_m.c:2364 cortex_m_dwt_setup(): [rp2040.core1] DWT_CTRL: 0x20000000
+Debug: 115 81 target.c:2563 target_read_u32(): address: 0xe0001fbc, value: 0x00000000
+Debug: 116 81 cortex_m.c:2371 cortex_m_dwt_setup(): [rp2040.core1] DWT_DEVARCH: 0x0
+Debug: 117 81 target.c:2651 target_write_u32(): address: 0xe0001028, value: 0x00000000
+Debug: 118 82 target.c:2651 target_write_u32(): address: 0xe0001038, value: 0x00000000
+Debug: 119 83 cortex_m.c:2418 cortex_m_dwt_setup(): [rp2040.core1] DWT dwtcr 0x20000000, comp 2, watch/trigger
+Info : 120 83 cortex_m.c:2688 cortex_m_examine(): [rp2040.core1] target has 4 breakpoints, 2 watchpoints
+Debug: 121 83 target.c:1775 target_call_event_callbacks(): target event 21 (examine-end) for core rp2040.core1
+Info : 122 83 target.c:691 target_examine_one(): [rp2040.core1] Examination succeed
+Debug: 123 84 command.c:153 script_debug(): command - flash init
+Debug: 124 84 tcl.c:1364 handle_flash_init_command(): Initializing flash devices...
+Debug: 125 84 command.c:153 script_debug(): command - nand init
+Debug: 126 84 tcl.c:484 handle_nand_init_command(): Initializing NAND devices...
+Debug: 127 84 command.c:153 script_debug(): command - pld init
+Debug: 128 84 pld.c:337 handle_pld_init_command(): Initializing PLDs...
+Debug: 129 84 command.c:153 script_debug(): command - tpiu init
+Info : 130 84 gdb_server.c:3797 gdb_target_start(): starting gdb server for rp2040.core0 on 3333
+Info : 131 84 server.c:297 add_service(): Listening on port 3333 for gdb connections
+Debug: 132 84 command.c:153 script_debug(): command - target names
+Debug: 133 84 command.c:153 script_debug(): command - reset init
+Debug: 134 84 target.c:1794 target_call_reset_callbacks(): target reset 3 (init)
+Debug: 135 84 target.c:1794 target_call_reset_callbacks(): target reset 3 (init)
+Debug: 136 84 command.c:153 script_debug(): command - target names
+Debug: 137 84 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-start
+Debug: 138 84 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-start
+Debug: 139 84 command.c:153 script_debug(): command - transport select
+Debug: 140 84 command.c:153 script_debug(): command - transport select
+Debug: 141 84 command.c:153 script_debug(): command - rp2040.core0 invoke-event examine-start
+Debug: 142 84 command.c:153 script_debug(): command - rp2040.core0 arp_examine allow-defer
+Debug: 143 87 arm_adi_v5.c:933 mem_ap_init(): MEM_AP CFG: large data 0, long address 0, big-endian 0
+Debug: 144 87 command.c:153 script_debug(): command - rp2040.core0 invoke-event examine-end
+Debug: 145 88 command.c:153 script_debug(): command - transport select
+Debug: 146 88 command.c:153 script_debug(): command - rp2040.core1 invoke-event examine-start
+Debug: 147 88 command.c:153 script_debug(): command - rp2040.core1 arp_examine allow-defer
+Debug: 148 91 arm_adi_v5.c:933 mem_ap_init(): MEM_AP CFG: large data 0, long address 0, big-endian 0
+Debug: 149 91 command.c:153 script_debug(): command - rp2040.core1 invoke-event examine-end
+Debug: 150 91 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-assert-pre
+Debug: 151 92 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-assert-pre
+Debug: 152 92 command.c:153 script_debug(): command - transport select
+Debug: 153 92 command.c:153 script_debug(): command - rp2040.core0 arp_reset assert 1
+Debug: 154 92 target.c:2131 target_free_all_working_areas_restore(): freeing all working areas
+Debug: 155 92 cortex_m.c:1593 cortex_m_assert_reset(): [rp2040.core0] target->state: unknown, examined
+Debug: 156 96 cortex_m.c:1708 cortex_m_assert_reset(): [rp2040.core0] Using Cortex-M SYSRESETREQ
+Debug: 157 97 arm_adi_v5.c:857 dap_dp_init_or_reconnect(): rp2040.dap0
+Debug: 158 98 arm_adi_v5.c:783 dap_dp_init(): rp2040.dap0
+Debug: 159 98 arm_adi_v5.c:814 dap_dp_init(): DAP: wait CDBGPWRUPACK
+Debug: 160 98 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x20000000, value 0x20000000
+Debug: 161 99 arm_adi_v5.c:822 dap_dp_init(): DAP: wait CSYSPWRUPACK
+Debug: 162 99 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x80000000, value 0x80000000
+Debug: 163 100 cmsis_dap.c:845 cmsis_dap_swd_write_from_queue(): refusing to enable sticky overrun detection
+Debug: 164 153 command.c:153 script_debug(): command - transport select
+Debug: 165 153 command.c:153 script_debug(): command - rp2040.core1 arp_reset assert 1
+Debug: 166 153 target.c:2131 target_free_all_working_areas_restore(): freeing all working areas
+Debug: 167 153 cortex_m.c:1593 cortex_m_assert_reset(): [rp2040.core1] target->state: unknown, examined
+Debug: 168 157 cortex_m.c:1708 cortex_m_assert_reset(): [rp2040.core1] Using Cortex-M SYSRESETREQ
+Debug: 169 158 arm_adi_v5.c:857 dap_dp_init_or_reconnect(): rp2040.dap1
+Debug: 170 159 arm_adi_v5.c:783 dap_dp_init(): rp2040.dap1
+Debug: 171 159 arm_adi_v5.c:814 dap_dp_init(): DAP: wait CDBGPWRUPACK
+Debug: 172 159 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x20000000, value 0x20000000
+Debug: 173 160 arm_adi_v5.c:822 dap_dp_init(): DAP: wait CSYSPWRUPACK
+Debug: 174 160 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x80000000, value 0x80000000
+Debug: 175 161 cmsis_dap.c:845 cmsis_dap_swd_write_from_queue(): refusing to enable sticky overrun detection
+Debug: 176 214 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-assert-post
+Debug: 177 214 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-assert-post
+Debug: 178 214 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-deassert-pre
+Debug: 179 214 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-deassert-pre
+Debug: 180 214 command.c:153 script_debug(): command - transport select
+Debug: 181 214 command.c:153 script_debug(): command - rp2040.core0 arp_reset deassert 1
+Debug: 182 214 target.c:2131 target_free_all_working_areas_restore(): freeing all working areas
+Debug: 183 214 cortex_m.c:1751 cortex_m_deassert_reset(): [rp2040.core0] target->state: reset, examined
+Debug: 184 214 core.c:640 adapter_system_reset(): SRST line released
+Debug: 185 214 command.c:153 script_debug(): command - transport select
+Debug: 186 214 command.c:153 script_debug(): command - rp2040.core1 arp_reset deassert 1
+Debug: 187 214 target.c:2131 target_free_all_working_areas_restore(): freeing all working areas
+Debug: 188 214 cortex_m.c:1751 cortex_m_deassert_reset(): [rp2040.core1] target->state: reset, examined
+Debug: 189 214 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-deassert-post
+Debug: 190 214 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-deassert-post
+Debug: 191 214 command.c:153 script_debug(): command - transport select
+Debug: 192 214 command.c:153 script_debug(): command - rp2040.core0 was_examined
+Debug: 193 214 command.c:153 script_debug(): command - rp2040.core0 arp_waitstate halted 1000
+Debug: 194 217 target.c:3224 target_wait_state(): waiting for target halted...
+Debug: 195 218 cortex_m.c:942 cortex_m_poll_one(): [rp2040.core0] Exit from reset with dcb_dhcsr 0x30003
+Debug: 196 219 cortex_m.c:612 cortex_m_endreset_event(): [rp2040.core0] DCB_DEMCR = 0x01000401
+Debug: 197 220 target.c:2651 target_write_u32(): address: 0xe0002000, value: 0x00000003
+Debug: 198 222 target.c:2563 target_read_u32(): address: 0xe0002000, value: 0x00000041
+Debug: 199 222 target.c:2651 target_write_u32(): address: 0xe0002008, value: 0x00000000
+Debug: 200 223 target.c:2651 target_write_u32(): address: 0xe000200c, value: 0x00000000
+Debug: 201 224 target.c:2651 target_write_u32(): address: 0xe0002010, value: 0x00000000
+Debug: 202 225 target.c:2651 target_write_u32(): address: 0xe0002014, value: 0x00000000
+Debug: 203 226 target.c:2651 target_write_u32(): address: 0xe0001020, value: 0x00000000
+Debug: 204 227 target.c:2651 target_write_u32(): address: 0xe0001024, value: 0x00000000
+Debug: 205 228 target.c:2651 target_write_u32(): address: 0xe0001028, value: 0x00000000
+Debug: 206 229 target.c:2651 target_write_u32(): address: 0xe0001030, value: 0x00000000
+Debug: 207 230 target.c:2651 target_write_u32(): address: 0xe0001034, value: 0x00000000
+Debug: 208 231 target.c:2651 target_write_u32(): address: 0xe0001038, value: 0x00000000
+Debug: 209 233 cortex_m.c:809 cortex_m_debug_entry(): [rp2040.core0]  
+Debug: 210 236 cortex_m.c:550 cortex_m_clear_halt(): [rp2040.core0] NVIC_DFSR 0x9
+Debug: 211 249 cortex_m.c:352 cortex_m_fast_read_all_regs(): [rp2040.core0] read 20 32-bit registers
+Debug: 212 249 cortex_m.c:879 cortex_m_debug_entry(): [rp2040.core0] entered debug state in core mode: Thread at PC 0xee, cpu in Non-Secure state, target->state: halted
+Debug: 213 249 cortex_m.c:964 cortex_m_poll_one(): [rp2040.core0] postpone target event 'halted'
+Debug: 214 249 command.c:153 script_debug(): command - rp2040.core0 curstate
+Debug: 215 249 command.c:153 script_debug(): command - transport select
+Debug: 216 249 command.c:153 script_debug(): command - rp2040.core1 was_examined
+Debug: 217 249 command.c:153 script_debug(): command - rp2040.core1 arp_waitstate halted 1000
+Debug: 218 252 cortex_m.c:1110 cortex_m_halt_one(): [rp2040.core1] target->state: reset
+Debug: 219 254 cortex_m.c:942 cortex_m_poll_one(): [rp2040.core1] Exit from reset with dcb_dhcsr 0x30003
+Debug: 220 255 cortex_m.c:612 cortex_m_endreset_event(): [rp2040.core1] DCB_DEMCR = 0x01000401
+Debug: 221 256 target.c:2651 target_write_u32(): address: 0xe0002000, value: 0x00000003
+Debug: 222 258 target.c:2563 target_read_u32(): address: 0xe0002000, value: 0x00000041
+Debug: 223 258 target.c:2651 target_write_u32(): address: 0xe0002008, value: 0x00000000
+Debug: 224 259 target.c:2651 target_write_u32(): address: 0xe000200c, value: 0x00000000
+Debug: 225 260 target.c:2651 target_write_u32(): address: 0xe0002010, value: 0x00000000
+Debug: 226 261 target.c:2651 target_write_u32(): address: 0xe0002014, value: 0x00000000
+Debug: 227 262 target.c:2651 target_write_u32(): address: 0xe0001020, value: 0x00000000
+Debug: 228 263 target.c:2651 target_write_u32(): address: 0xe0001024, value: 0x00000000
+Debug: 229 264 target.c:2651 target_write_u32(): address: 0xe0001028, value: 0x00000000
+Debug: 230 265 target.c:2651 target_write_u32(): address: 0xe0001030, value: 0x00000000
+Debug: 231 266 target.c:2651 target_write_u32(): address: 0xe0001034, value: 0x00000000
+Debug: 232 267 target.c:2651 target_write_u32(): address: 0xe0001038, value: 0x00000000
+Debug: 233 269 cortex_m.c:809 cortex_m_debug_entry(): [rp2040.core1]  
+Debug: 234 272 cortex_m.c:550 cortex_m_clear_halt(): [rp2040.core1] NVIC_DFSR 0x9
+Debug: 235 285 cortex_m.c:352 cortex_m_fast_read_all_regs(): [rp2040.core1] read 20 32-bit registers
+Debug: 236 285 cortex_m.c:879 cortex_m_debug_entry(): [rp2040.core1] entered debug state in core mode: Thread at PC 0xee, cpu in Non-Secure state, target->state: halted
+Debug: 237 285 cortex_m.c:964 cortex_m_poll_one(): [rp2040.core1] postpone target event 'halted'
+Debug: 238 285 cortex_m.c:1079 cortex_m_poll_smp(): [rp2040.core0] sending postponed target event 'halted'
+Debug: 239 285 target.c:1775 target_call_event_callbacks(): target event 0 (gdb-halt) for core rp2040.core0
+Debug: 240 285 target.c:1775 target_call_event_callbacks(): target event 1 (halted) for core rp2040.core0
+User : 241 285 armv7m.c:741 armv7m_arch_state(): [rp2040.core0] halted due to breakpoint, current mode: Thread 
+xPSR: 0xf1000000 pc: 0x000000ee msp: 0x20041f00
+Debug: 242 285 cortex_m.c:1079 cortex_m_poll_smp(): [rp2040.core1] sending postponed target event 'halted'
+Debug: 243 285 target.c:1775 target_call_event_callbacks(): target event 0 (gdb-halt) for core rp2040.core1
+Debug: 244 285 target.c:1775 target_call_event_callbacks(): target event 1 (halted) for core rp2040.core1
+User : 245 285 armv7m.c:741 armv7m_arch_state(): [rp2040.core1] halted due to debug-request, current mode: Thread 
+xPSR: 0xf1000000 pc: 0x000000ee msp: 0x20041f00
+Debug: 246 285 command.c:153 script_debug(): command - rp2040.core1 curstate
+Debug: 247 285 command.c:153 script_debug(): command - transport select
+Debug: 248 285 command.c:153 script_debug(): command - rp2040.core0 was_examined
+Debug: 249 285 command.c:153 script_debug(): command - rp2040.core0 arp_waitstate halted 5000
+Debug: 250 288 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-init
+Debug: 251 289 command.c:153 script_debug(): command - transport select
+Debug: 252 289 command.c:153 script_debug(): command - rp2040.core1 was_examined
+Debug: 253 289 command.c:153 script_debug(): command - rp2040.core1 arp_waitstate halted 5000
+Debug: 254 292 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-init
+Debug: 255 293 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-end
+Debug: 256 293 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-end
+Debug: 257 301 command.c:153 script_debug(): command - echo ** Programming Started **
+User : 258 301 command.c:678 handle_echo(): ** Programming Started **
+Debug: 259 301 command.c:153 script_debug(): command - flash write_image erase main.elf
+Debug: 260 301 configuration.c:88 find_file(): found main.elf
+Debug: 261 301 image.c:69 autodetect_image_type(): ELF image detected.
+Debug: 262 301 configuration.c:88 find_file(): found main.elf
+Debug: 263 301 image.c:638 image_elf_read_headers(): ELF32 image detected.
+
+>>>> Using the ROM function lookup table to find the location of the EX function:
+
+Debug: 264 304 target.c:2563 target_read_u32(): address: 0x00000010, value: 0x0201754d
+Debug: 265 304 rp2040.c:183 rp2040_lookup_rom_symbol(): Looking up ROM symbol 'EX' in RP2040 table
+Debug: 266 305 arm_adi_v5.c:400 mem_ap_setup_transfer_verify_size_packing(): AP#0x0 probed size 2: supported
+Debug: 267 306 target.c:2587 target_read_u16(): address: 0x00000014, value: 0x007a
+Debug: 268 307 target.c:2587 target_read_u16(): address: 0x0000007a, value: 0x3350
+Debug: 269 308 target.c:2587 target_read_u16(): address: 0x0000007e, value: 0x3352
+Debug: 270 309 target.c:2587 target_read_u16(): address: 0x00000082, value: 0x334c
+Debug: 271 310 target.c:2587 target_read_u16(): address: 0x00000086, value: 0x3354
+Debug: 272 311 target.c:2587 target_read_u16(): address: 0x0000008a, value: 0x534d
+Debug: 273 312 target.c:2587 target_read_u16(): address: 0x0000008e, value: 0x3453
+Debug: 274 313 target.c:2587 target_read_u16(): address: 0x00000092, value: 0x434d
+Debug: 275 314 target.c:2587 target_read_u16(): address: 0x00000096, value: 0x3443
+Debug: 276 315 target.c:2587 target_read_u16(): address: 0x0000009a, value: 0x4255
+Debug: 277 316 target.c:2587 target_read_u16(): address: 0x0000009e, value: 0x5444
+Debug: 278 317 target.c:2587 target_read_u16(): address: 0x000000a2, value: 0x4544
+Debug: 279 318 target.c:2587 target_read_u16(): address: 0x000000a6, value: 0x5657
+Debug: 280 319 target.c:2587 target_read_u16(): address: 0x000000aa, value: 0x4649
+Debug: 281 320 target.c:2587 target_read_u16(): address: 0x000000ae, value: 0x5845
+Debug: 282 321 target.c:2587 target_read_u16(): address: 0x000000b0, value: 0x23f5
+Debug: 283 321 rp2040.c:207 rp2040_lookup_rom_symbol():  -> found: 0x23f5
+
+>>>> Same for IF
+
+Debug: 284 322 target.c:2563 target_read_u32(): address: 0x00000010, value: 0x0201754d
+Debug: 285 322 rp2040.c:183 rp2040_lookup_rom_symbol(): Looking up ROM symbol 'IF' in RP2040 table
+Debug: 286 323 target.c:2587 target_read_u16(): address: 0x00000014, value: 0x007a
+Debug: 287 324 target.c:2587 target_read_u16(): address: 0x0000007a, value: 0x3350
+Debug: 288 325 target.c:2587 target_read_u16(): address: 0x0000007e, value: 0x3352
+Debug: 289 326 target.c:2587 target_read_u16(): address: 0x00000082, value: 0x334c
+Debug: 290 327 target.c:2587 target_read_u16(): address: 0x00000086, value: 0x3354
+Debug: 291 328 target.c:2587 target_read_u16(): address: 0x0000008a, value: 0x534d
+Debug: 292 329 target.c:2587 target_read_u16(): address: 0x0000008e, value: 0x3453
+Debug: 293 330 target.c:2587 target_read_u16(): address: 0x00000092, value: 0x434d
+Debug: 294 331 target.c:2587 target_read_u16(): address: 0x00000096, value: 0x3443
+Debug: 295 332 target.c:2587 target_read_u16(): address: 0x0000009a, value: 0x4255
+Debug: 296 333 target.c:2587 target_read_u16(): address: 0x0000009e, value: 0x5444
+Debug: 297 334 target.c:2587 target_read_u16(): address: 0x000000a2, value: 0x4544
+Debug: 298 335 target.c:2587 target_read_u16(): address: 0x000000a6, value: 0x5657
+Debug: 299 336 target.c:2587 target_read_u16(): address: 0x000000aa, value: 0x4649
+Debug: 300 337 target.c:2587 target_read_u16(): address: 0x000000ac, value: 0x24a1
+Debug: 301 337 rp2040.c:207 rp2040_lookup_rom_symbol():  -> found: 0x24a1
+
+>>>> Same for RE
+
+Debug: 302 338 target.c:2563 target_read_u32(): address: 0x00000010, value: 0x0201754d
+Debug: 303 338 rp2040.c:183 rp2040_lookup_rom_symbol(): Looking up ROM symbol 'RE' in RP2040 table
+Debug: 304 339 target.c:2587 target_read_u16(): address: 0x00000014, value: 0x007a
+Debug: 305 340 target.c:2587 target_read_u16(): address: 0x0000007a, value: 0x3350
+Debug: 306 341 target.c:2587 target_read_u16(): address: 0x0000007e, value: 0x3352
+Debug: 307 342 target.c:2587 target_read_u16(): address: 0x00000082, value: 0x334c
+Debug: 308 343 target.c:2587 target_read_u16(): address: 0x00000086, value: 0x3354
+Debug: 309 344 target.c:2587 target_read_u16(): address: 0x0000008a, value: 0x534d
+Debug: 310 345 target.c:2587 target_read_u16(): address: 0x0000008e, value: 0x3453
+Debug: 311 346 target.c:2587 target_read_u16(): address: 0x00000092, value: 0x434d
+Debug: 312 347 target.c:2587 target_read_u16(): address: 0x00000096, value: 0x3443
+Debug: 313 348 target.c:2587 target_read_u16(): address: 0x0000009a, value: 0x4255
+Debug: 314 349 target.c:2587 target_read_u16(): address: 0x0000009e, value: 0x5444
+Debug: 315 350 target.c:2587 target_read_u16(): address: 0x000000a2, value: 0x4544
+Debug: 316 351 target.c:2587 target_read_u16(): address: 0x000000a6, value: 0x5657
+Debug: 317 352 target.c:2587 target_read_u16(): address: 0x000000aa, value: 0x4649
+Debug: 318 353 target.c:2587 target_read_u16(): address: 0x000000ae, value: 0x5845
+Debug: 319 354 target.c:2587 target_read_u16(): address: 0x000000b2, value: 0x4552
+Debug: 320 355 target.c:2587 target_read_u16(): address: 0x000000b4, value: 0x237d
+Debug: 321 355 rp2040.c:207 rp2040_lookup_rom_symbol():  -> found: 0x237d
+
+>>>> Same for RP
+
+Debug: 322 356 target.c:2563 target_read_u32(): address: 0x00000010, value: 0x0201754d
+Debug: 323 356 rp2040.c:183 rp2040_lookup_rom_symbol(): Looking up ROM symbol 'RP' in RP2040 table
+Debug: 324 357 target.c:2587 target_read_u16(): address: 0x00000014, value: 0x007a
+Debug: 325 358 target.c:2587 target_read_u16(): address: 0x0000007a, value: 0x3350
+Debug: 326 359 target.c:2587 target_read_u16(): address: 0x0000007e, value: 0x3352
+Debug: 327 360 target.c:2587 target_read_u16(): address: 0x00000082, value: 0x334c
+Debug: 328 361 target.c:2587 target_read_u16(): address: 0x00000086, value: 0x3354
+Debug: 329 362 target.c:2587 target_read_u16(): address: 0x0000008a, value: 0x534d
+Debug: 330 363 target.c:2587 target_read_u16(): address: 0x0000008e, value: 0x3453
+Debug: 331 364 target.c:2587 target_read_u16(): address: 0x00000092, value: 0x434d
+Debug: 332 365 target.c:2587 target_read_u16(): address: 0x00000096, value: 0x3443
+Debug: 333 366 target.c:2587 target_read_u16(): address: 0x0000009a, value: 0x4255
+Debug: 334 367 target.c:2587 target_read_u16(): address: 0x0000009e, value: 0x5444
+Debug: 335 368 target.c:2587 target_read_u16(): address: 0x000000a2, value: 0x4544
+Debug: 336 369 target.c:2587 target_read_u16(): address: 0x000000a6, value: 0x5657
+Debug: 337 370 target.c:2587 target_read_u16(): address: 0x000000aa, value: 0x4649
+Debug: 338 371 target.c:2587 target_read_u16(): address: 0x000000ae, value: 0x5845
+Debug: 339 372 target.c:2587 target_read_u16(): address: 0x000000b2, value: 0x4552
+Debug: 340 373 target.c:2587 target_read_u16(): address: 0x000000b6, value: 0x5052
+Debug: 341 374 target.c:2587 target_read_u16(): address: 0x000000b8, value: 0x23c5
+Debug: 342 374 rp2040.c:207 rp2040_lookup_rom_symbol():  -> found: 0x23c5
+
+>>>> Same for FC
+
+Debug: 343 375 target.c:2563 target_read_u32(): address: 0x00000010, value: 0x0201754d
+Debug: 344 375 rp2040.c:183 rp2040_lookup_rom_symbol(): Looking up ROM symbol 'FC' in RP2040 table
+Debug: 345 376 target.c:2587 target_read_u16(): address: 0x00000014, value: 0x007a
+Debug: 346 377 target.c:2587 target_read_u16(): address: 0x0000007a, value: 0x3350
+Debug: 347 378 target.c:2587 target_read_u16(): address: 0x0000007e, value: 0x3352
+Debug: 348 379 target.c:2587 target_read_u16(): address: 0x00000082, value: 0x334c
+Debug: 349 380 target.c:2587 target_read_u16(): address: 0x00000086, value: 0x3354
+Debug: 350 381 target.c:2587 target_read_u16(): address: 0x0000008a, value: 0x534d
+Debug: 351 382 target.c:2587 target_read_u16(): address: 0x0000008e, value: 0x3453
+Debug: 352 383 target.c:2587 target_read_u16(): address: 0x00000092, value: 0x434d
+Debug: 353 384 target.c:2587 target_read_u16(): address: 0x00000096, value: 0x3443
+Debug: 354 385 target.c:2587 target_read_u16(): address: 0x0000009a, value: 0x4255
+Debug: 355 386 target.c:2587 target_read_u16(): address: 0x0000009e, value: 0x5444
+Debug: 356 387 target.c:2587 target_read_u16(): address: 0x000000a2, value: 0x4544
+Debug: 357 388 target.c:2587 target_read_u16(): address: 0x000000a6, value: 0x5657
+Debug: 358 389 target.c:2587 target_read_u16(): address: 0x000000aa, value: 0x4649
+Debug: 359 390 target.c:2587 target_read_u16(): address: 0x000000ae, value: 0x5845
+Debug: 360 391 target.c:2587 target_read_u16(): address: 0x000000b2, value: 0x4552
+Debug: 361 392 target.c:2587 target_read_u16(): address: 0x000000b6, value: 0x5052
+Debug: 362 393 target.c:2587 target_read_u16(): address: 0x000000ba, value: 0x4346
+Debug: 363 394 target.c:2587 target_read_u16(): address: 0x000000bc, value: 0x2361
+Debug: 364 394 rp2040.c:207 rp2040_lookup_rom_symbol():  -> found: 0x2361
+
+>>> Same for CX
+
+Debug: 365 395 target.c:2563 target_read_u32(): address: 0x00000010, value: 0x0201754d
+Debug: 366 395 rp2040.c:183 rp2040_lookup_rom_symbol(): Looking up ROM symbol 'CX' in RP2040 table
+Debug: 367 396 target.c:2587 target_read_u16(): address: 0x00000014, value: 0x007a
+Debug: 368 397 target.c:2587 target_read_u16(): address: 0x0000007a, value: 0x3350
+Debug: 369 398 target.c:2587 target_read_u16(): address: 0x0000007e, value: 0x3352
+Debug: 370 399 target.c:2587 target_read_u16(): address: 0x00000082, value: 0x334c
+Debug: 371 400 target.c:2587 target_read_u16(): address: 0x00000086, value: 0x3354
+Debug: 372 401 target.c:2587 target_read_u16(): address: 0x0000008a, value: 0x534d
+Debug: 373 402 target.c:2587 target_read_u16(): address: 0x0000008e, value: 0x3453
+Debug: 374 403 target.c:2587 target_read_u16(): address: 0x00000092, value: 0x434d
+Debug: 375 404 target.c:2587 target_read_u16(): address: 0x00000096, value: 0x3443
+Debug: 376 405 target.c:2587 target_read_u16(): address: 0x0000009a, value: 0x4255
+Debug: 377 406 target.c:2587 target_read_u16(): address: 0x0000009e, value: 0x5444
+Debug: 378 407 target.c:2587 target_read_u16(): address: 0x000000a2, value: 0x4544
+Debug: 379 408 target.c:2587 target_read_u16(): address: 0x000000a6, value: 0x5657
+Debug: 380 409 target.c:2587 target_read_u16(): address: 0x000000aa, value: 0x4649
+Debug: 381 410 target.c:2587 target_read_u16(): address: 0x000000ae, value: 0x5845
+Debug: 382 411 target.c:2587 target_read_u16(): address: 0x000000b2, value: 0x4552
+Debug: 383 412 target.c:2587 target_read_u16(): address: 0x000000b6, value: 0x5052
+Debug: 384 413 target.c:2587 target_read_u16(): address: 0x000000ba, value: 0x4346
+Debug: 385 414 target.c:2587 target_read_u16(): address: 0x000000be, value: 0x5843
+Debug: 386 415 target.c:2587 target_read_u16(): address: 0x000000c0, value: 0x2331
+Debug: 387 416 rp2040.c:207 rp2040_lookup_rom_symbol():  -> found: 0x2331
+
+Debug: 388 416 target.c:2563 target_read_u32(): address: 0x00000010, value: 0x0201754d
+Debug: 389 416 rp2040.c:183 rp2040_lookup_rom_symbol(): Looking up ROM symbol 'SR' in RP2040 table
+Debug: 390 417 target.c:2587 target_read_u16(): address: 0x00000014, value: 0x007a
+Debug: 391 418 target.c:2587 target_read_u16(): address: 0x0000007a, value: 0x3350
+Debug: 392 419 target.c:2587 target_read_u16(): address: 0x0000007e, value: 0x3352
+Debug: 393 420 target.c:2587 target_read_u16(): address: 0x00000082, value: 0x334c
+Debug: 394 421 target.c:2587 target_read_u16(): address: 0x00000086, value: 0x3354
+Debug: 395 422 target.c:2587 target_read_u16(): address: 0x0000008a, value: 0x534d
+Debug: 396 423 target.c:2587 target_read_u16(): address: 0x0000008e, value: 0x3453
+Debug: 397 424 target.c:2587 target_read_u16(): address: 0x00000092, value: 0x434d
+Debug: 398 425 target.c:2587 target_read_u16(): address: 0x00000096, value: 0x3443
+Debug: 399 426 target.c:2587 target_read_u16(): address: 0x0000009a, value: 0x4255
+Debug: 400 427 target.c:2587 target_read_u16(): address: 0x0000009e, value: 0x5444
+Debug: 401 428 target.c:2587 target_read_u16(): address: 0x000000a2, value: 0x4544
+Debug: 402 429 target.c:2587 target_read_u16(): address: 0x000000a6, value: 0x5657
+Debug: 403 430 target.c:2587 target_read_u16(): address: 0x000000aa, value: 0x4649
+Debug: 404 431 target.c:2587 target_read_u16(): address: 0x000000ae, value: 0x5845
+Debug: 405 432 target.c:2587 target_read_u16(): address: 0x000000b2, value: 0x4552
+Debug: 406 433 target.c:2587 target_read_u16(): address: 0x000000b6, value: 0x5052
+Debug: 407 434 target.c:2587 target_read_u16(): address: 0x000000ba, value: 0x4346
+Debug: 408 435 target.c:2587 target_read_u16(): address: 0x000000be, value: 0x5843
+Debug: 409 436 target.c:2587 target_read_u16(): address: 0x000000c2, value: 0x4345
+Debug: 410 437 target.c:2587 target_read_u16(): address: 0x000000c6, value: 0x0000
+Warn : 411 438 rp2040.c:397 rp2xxx_populate_rom_pointer_cache(): Function FUNC_BOOTROM_STATE_RESET not found in RP2xxx ROM. (probably an RP2040 or an RP2350 A0)
+
+Debug: 412 438 target.c:2563 target_read_u32(): address: 0x00000010, value: 0x0201754d
+Debug: 413 439 rp2040.c:183 rp2040_lookup_rom_symbol(): Looking up ROM symbol 'RA' in RP2040 table
+Debug: 414 439 target.c:2587 target_read_u16(): address: 0x00000014, value: 0x007a
+Debug: 415 440 target.c:2587 target_read_u16(): address: 0x0000007a, value: 0x3350
+Debug: 416 441 target.c:2587 target_read_u16(): address: 0x0000007e, value: 0x3352
+Debug: 417 442 target.c:2587 target_read_u16(): address: 0x00000082, value: 0x334c
+Debug: 418 443 target.c:2587 target_read_u16(): address: 0x00000086, value: 0x3354
+Debug: 419 444 target.c:2587 target_read_u16(): address: 0x0000008a, value: 0x534d
+Debug: 420 445 target.c:2587 target_read_u16(): address: 0x0000008e, value: 0x3453
+Debug: 421 446 target.c:2587 target_read_u16(): address: 0x00000092, value: 0x434d
+Debug: 422 447 target.c:2587 target_read_u16(): address: 0x00000096, value: 0x3443
+Debug: 423 448 target.c:2587 target_read_u16(): address: 0x0000009a, value: 0x4255
+Debug: 424 449 target.c:2587 target_read_u16(): address: 0x0000009e, value: 0x5444
+Debug: 425 450 target.c:2587 target_read_u16(): address: 0x000000a2, value: 0x4544
+Debug: 426 451 target.c:2587 target_read_u16(): address: 0x000000a6, value: 0x5657
+Debug: 427 452 target.c:2587 target_read_u16(): address: 0x000000aa, value: 0x4649
+Debug: 428 453 target.c:2587 target_read_u16(): address: 0x000000ae, value: 0x5845
+Debug: 429 454 target.c:2587 target_read_u16(): address: 0x000000b2, value: 0x4552
+Debug: 430 455 target.c:2587 target_read_u16(): address: 0x000000b6, value: 0x5052
+Debug: 431 456 target.c:2587 target_read_u16(): address: 0x000000ba, value: 0x4346
+Debug: 432 457 target.c:2587 target_read_u16(): address: 0x000000be, value: 0x5843
+Debug: 433 458 target.c:2587 target_read_u16(): address: 0x000000c2, value: 0x4345
+Debug: 434 459 target.c:2587 target_read_u16(): address: 0x000000c6, value: 0x0000
+Warn : 435 460 rp2040.c:403 rp2xxx_populate_rom_pointer_cache(): Function FUNC_FLASH_RESET_ADDRESS_TRANS not found in RP2xxx ROM. (probably an RP2040 or an RP2350 A0)
+
+
+
+
+Info : 436 460 rp2040.c:898 rp2040_flash_probe(): RP2040 Flash Probe: 33554432 bytes @0x10000000, in 8192 sectors
+
+Info : 437 460 core.c:869 flash_write_unlock_verify(): Padding image section 1 at 0x10009028 with 216 bytes (bank write end alignment)
+Debug: 438 460 core.c:926 flash_write_unlock_verify(): image_read_section: section = 0, t_section_num = 0, section_offset = 0, buffer_idx = 0, size_read = 32864
+Debug: 439 460 image.c:667 image_elf32_read_section(): load segment 0 at 0x0 (sz = 0x8060)
+Debug: 440 460 image.c:673 image_elf32_read_section(): read elf: size = 0x8060 at 0x1000
+Debug: 441 460 core.c:926 flash_write_unlock_verify(): image_read_section: section = 1, t_section_num = 1, section_offset = 0, buffer_idx = 32864, size_read = 4040
+Debug: 442 460 image.c:667 image_elf32_read_section(): load segment 1 at 0x0 (sz = 0xfc8)
+Debug: 443 460 image.c:673 image_elf32_read_section(): read elf: size = 0xfc8 at 0x90c0
+Warn : 444 460 core.c:545 flash_iterate_address_range_inner(): Adding extra erase range, 0x10009100 .. 0x10009fff
+Debug: 445 460 rp2040.c:819 rp2040_flash_erase(): RP2040 erase 40960 bytes starting at 0x0
+Debug: 446 460 target.c:1980 target_alloc_working_area_try(): MMU disabled, using physical address for working memory 0x20010000
+Debug: 447 460 target.c:2034 target_alloc_working_area_try(): allocated new working area of 1024 bytes at address 0x20010000
+Debug: 448 490 target.c:1901 print_wa_layout(): b* 0x20010000-0x200103ff (1024 bytes)
+Debug: 449 490 target.c:1901 print_wa_layout():    0x20010400-0x2001ffff (64512 bytes)
+Debug: 450 490 target.c:2034 target_alloc_working_area_try(): allocated new working area of 1024 bytes at address 0x20010400
+Debug: 451 520 target.c:1901 print_wa_layout(): b* 0x20010000-0x200103ff (1024 bytes)
+Debug: 452 520 target.c:1901 print_wa_layout(): b* 0x20010400-0x200107ff (1024 bytes)
+Debug: 453 520 target.c:1901 print_wa_layout():    0x20010800-0x2001ffff (63488 bytes)
+Debug: 454 520 rp2040.c:687 setup_for_raw_flash_cmd(): Connecting flash IOs and issuing XIP exit sequence to flash
+Debug: 455 520 rp2040.c:428 rp2xxx_call_rom_func_batch(): Calling batch of 2 ROM functions:
+Debug: 456 520 rp2040.c:430 rp2xxx_call_rom_func_batch():   func @ 24a1
+Debug: 457 520 rp2040.c:431 rp2xxx_call_rom_func_batch():     sp = 20010400
+Debug: 458 520 rp2040.c:433 rp2xxx_call_rom_func_batch():     a0 = 0
+Debug: 459 520 rp2040.c:433 rp2xxx_call_rom_func_batch():     a1 = 0
+Debug: 460 520 rp2040.c:433 rp2xxx_call_rom_func_batch():     a2 = 0
+Debug: 461 520 rp2040.c:433 rp2xxx_call_rom_func_batch():     a3 = 0
+Debug: 462 520 rp2040.c:430 rp2xxx_call_rom_func_batch():   func @ 23f5
+Debug: 463 520 rp2040.c:431 rp2xxx_call_rom_func_batch():     sp = 20010400
+Debug: 464 520 rp2040.c:433 rp2xxx_call_rom_func_batch():     a0 = 0
+Debug: 465 520 rp2040.c:433 rp2xxx_call_rom_func_batch():     a1 = 0
+Debug: 466 520 rp2040.c:433 rp2xxx_call_rom_func_batch():     a2 = 0
+Debug: 467 520 rp2040.c:433 rp2xxx_call_rom_func_batch():     a3 = 0
+Debug: 468 520 rp2040.c:436 rp2xxx_call_rom_func_batch(): Calling on core "rp2040.core0"
+Debug: 469 520 rp2040.c:449 rp2xxx_call_rom_func_batch(): Using algo: rp2xxx_rom_call_batch_algo_armv6m
+Debug: 470 520 target.c:2345 target_write_buffer(): writing buffer of 32 byte at 0x20010400
+Debug: 471 521 target.c:2345 target_write_buffer(): writing buffer of 48 byte at 0x20010420
+Debug: 472 522 target.c:2651 target_write_u32(): address: 0x20010450, value: 0x00000000
+Debug: 473 523 target.c:1775 target_call_event_callbacks(): target event 3 (resume-start) for core rp2040.core0
+Debug: 474 524 armv7m.c:174 armv7m_restore_context():  
+Debug: 475 525 armv7m.c:441 armv7m_write_core_reg(): write pmsk_bpri_fltmsk_ctrl value 0x00000001
+Debug: 476 526 armv7m.c:441 armv7m_write_core_reg(): write xpsr value 0x01000000
+Debug: 477 527 armv7m.c:441 armv7m_write_core_reg(): write pc value 0x20010400
+Debug: 478 527 target.c:1775 target_call_event_callbacks(): target event 18 (debug-resumed) for core rp2040.core0
+Debug: 479 528 cortex_m.c:1384 cortex_m_resume(): [rp2040.core0] debug resumed at 0x20010400
+Debug: 480 528 target.c:1775 target_call_event_callbacks(): target event 4 (resume-end) for core rp2040.core0
+Debug: 481 528 cortex_m.c:809 cortex_m_debug_entry(): [rp2040.core0]  
+Debug: 482 531 cortex_m.c:550 cortex_m_clear_halt(): [rp2040.core0] NVIC_DFSR 0x3
+Debug: 483 544 cortex_m.c:352 cortex_m_fast_read_all_regs(): [rp2040.core0] read 20 32-bit registers
+Debug: 484 544 cortex_m.c:879 cortex_m_debug_entry(): [rp2040.core0] entered debug state in core mode: Thread at PC 0x2001041e, cpu in Non-Secure state, target->state: halted
+Debug: 485 544 target.c:1775 target_call_event_callbacks(): target event 17 (debug-halted) for core rp2040.core0
+Debug: 486 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register primask with value 0x00000000
+Debug: 487 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register pmsk_bpri_fltmsk_ctrl with value 0x00000000
+Debug: 488 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register msp with value 0x20041f00
+Debug: 489 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register xpsr with value 0xf1000000
+Debug: 490 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register pc with value 0x000000ee
+Debug: 491 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register lr with value 0xffffffff
+Debug: 492 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register sp with value 0x20041f00
+Debug: 493 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register r12 with value 0xffffffff
+Debug: 494 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register r7 with value 0xffffffff
+Debug: 495 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register r5 with value 0xffffffff
+Debug: 496 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register r4 with value 0xffffffff
+Debug: 497 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register r3 with value 0xffffffff
+Debug: 498 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register r2 with value 0xffffffff
+Debug: 499 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register r1 with value 0xffffffff
+Debug: 500 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register r0 with value 0xffffffff
+Debug: 501 544 rp2040.c:845 rp2040_flash_erase():   Erase chunk: 0x00000000 -> 0x00009fff
+Debug: 502 544 rp2040.c:428 rp2xxx_call_rom_func_batch(): Calling batch of 1 ROM functions:
+Debug: 503 544 rp2040.c:430 rp2xxx_call_rom_func_batch():   func @ 237d
+Debug: 504 544 rp2040.c:431 rp2xxx_call_rom_func_batch():     sp = 20010400
+Debug: 505 544 rp2040.c:433 rp2xxx_call_rom_func_batch():     a0 = 0
+Debug: 506 544 rp2040.c:433 rp2xxx_call_rom_func_batch():     a1 = a000
+Debug: 507 544 rp2040.c:433 rp2xxx_call_rom_func_batch():     a2 = 10000
+Debug: 508 544 rp2040.c:433 rp2xxx_call_rom_func_batch():     a3 = d8
+Debug: 509 544 rp2040.c:436 rp2xxx_call_rom_func_batch(): Calling on core "rp2040.core0"
+Debug: 510 544 rp2040.c:449 rp2xxx_call_rom_func_batch(): Using algo: rp2xxx_rom_call_batch_algo_armv6m
+Debug: 511 544 target.c:2345 target_write_buffer(): writing buffer of 32 byte at 0x20010400
+Debug: 512 545 target.c:2345 target_write_buffer(): writing buffer of 24 byte at 0x20010420
+Debug: 513 546 target.c:2651 target_write_u32(): address: 0x20010438, value: 0x00000000
+Debug: 514 547 target.c:1775 target_call_event_callbacks(): target event 3 (resume-start) for core rp2040.core0
+Debug: 515 548 armv7m.c:174 armv7m_restore_context():  
+Debug: 516 549 armv7m.c:441 armv7m_write_core_reg(): write pmsk_bpri_fltmsk_ctrl value 0x00000001
+Debug: 517 550 armv7m.c:441 armv7m_write_core_reg(): write msp value 0x20041f00
+Debug: 518 551 armv7m.c:441 armv7m_write_core_reg(): write xpsr value 0x01000000
+Debug: 519 552 armv7m.c:441 armv7m_write_core_reg(): write pc value 0x20010400
+Debug: 520 553 armv7m.c:441 armv7m_write_core_reg(): write lr value 0xffffffff
+Debug: 521 554 armv7m.c:441 armv7m_write_core_reg(): write sp value 0x20041f00
+Debug: 522 555 armv7m.c:441 armv7m_write_core_reg(): write r12 value 0xffffffff
+Debug: 523 556 armv7m.c:441 armv7m_write_core_reg(): write r7 value 0xffffffff
+Debug: 524 557 armv7m.c:441 armv7m_write_core_reg(): write r5 value 0xffffffff
+Debug: 525 558 armv7m.c:441 armv7m_write_core_reg(): write r4 value 0xffffffff
+Debug: 526 559 armv7m.c:441 armv7m_write_core_reg(): write r3 value 0xffffffff
+Debug: 527 560 armv7m.c:441 armv7m_write_core_reg(): write r2 value 0xffffffff
+Debug: 528 561 armv7m.c:441 armv7m_write_core_reg(): write r1 value 0xffffffff
+Debug: 529 562 armv7m.c:441 armv7m_write_core_reg(): write r0 value 0xffffffff
+Debug: 530 562 target.c:1775 target_call_event_callbacks(): target event 18 (debug-resumed) for core rp2040.core0
+Debug: 531 563 cortex_m.c:1384 cortex_m_resume(): [rp2040.core0] debug resumed at 0x20010400
+Debug: 532 563 target.c:1775 target_call_event_callbacks(): target event 4 (resume-end) for core rp2040.core0
+Debug: 533 564 target.c:3224 target_wait_state(): waiting for target halted...
+Debug: 534 1012 cortex_m.c:809 cortex_m_debug_entry(): [rp2040.core0]  
+Debug: 535 1015 cortex_m.c:550 cortex_m_clear_halt(): [rp2040.core0] NVIC_DFSR 0x3
+Debug: 536 1027 cortex_m.c:352 cortex_m_fast_read_all_regs(): [rp2040.core0] read 20 32-bit registers
+Debug: 537 1027 cortex_m.c:879 cortex_m_debug_entry(): [rp2040.core0] entered debug state in core mode: Thread at PC 0x2001041e, cpu in Non-Secure state, target->state: halted
+Debug: 538 1027 target.c:1775 target_call_event_callbacks(): target event 17 (debug-halted) for core rp2040.core0
+Debug: 539 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register primask with value 0x00000000
+Debug: 540 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register pmsk_bpri_fltmsk_ctrl with value 0x00000000
+Debug: 541 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register msp with value 0x20041f00
+Debug: 542 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register xpsr with value 0xf1000000
+Debug: 543 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register pc with value 0x000000ee
+Debug: 544 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register lr with value 0xffffffff
+Debug: 545 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register sp with value 0x20041f00
+Debug: 546 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register r12 with value 0xffffffff
+Debug: 547 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register r7 with value 0xffffffff
+Debug: 548 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register r5 with value 0xffffffff
+Debug: 549 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register r4 with value 0xffffffff
+Debug: 550 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register r3 with value 0xffffffff
+Debug: 551 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register r2 with value 0xffffffff
+Debug: 552 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register r1 with value 0xffffffff
+Debug: 553 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register r0 with value 0xffffffff
+Debug: 554 1027 log.c:408 gdb_timeout_warning(): keep_alive() was not invoked in the 1000 ms timelimit (1027 ms). This may cause trouble with GDB connections.
+Debug: 555 1027 rp2040.c:712 cleanup_after_raw_flash_cmd(): Cleaning up after flash operations
+Debug: 556 1057 target.c:2102 target_free_working_area_restore(): freed 1024 bytes of working area at address 0x20010000
+Debug: 557 1057 target.c:1901 print_wa_layout(): b  0x20010000-0x200103ff (1024 bytes)
+Debug: 558 1057 target.c:1901 print_wa_layout(): b* 0x20010400-0x200107ff (1024 bytes)
+Debug: 559 1057 target.c:1901 print_wa_layout():    0x20010800-0x2001ffff (63488 bytes)
+Debug: 560 1086 target.c:2102 target_free_working_area_restore(): freed 1024 bytes of working area at address 0x20010400
+Debug: 561 1086 target.c:1901 print_wa_layout():    0x20010000-0x2001ffff (65536 bytes)
+Debug: 562 1086 rp2040.c:727 rp2040_flash_write(): Writing 37120 bytes starting at 0x0
+Debug: 563 1086 target.c:2034 target_alloc_working_area_try(): allocated new working area of 1024 bytes at address 0x20010000
+Debug: 564 1116 target.c:1901 print_wa_layout(): b* 0x20010000-0x200103ff (1024 bytes)
+Debug: 565 1116 target.c:1901 print_wa_layout():    0x20010400-0x2001ffff (64512 bytes)
+Debug: 566 1116 target.c:2034 target_alloc_working_area_try(): allocated new working area of 1024 bytes at address 0x20010400
+Debug: 567 1146 target.c:1901 print_wa_layout(): b* 0x20010000-0x200103ff (1024 bytes)
+Debug: 568 1146 target.c:1901 print_wa_layout(): b* 0x20010400-0x200107ff (1024 bytes)
+Debug: 569 1146 target.c:1901 print_wa_layout():    0x20010800-0x2001ffff (63488 bytes)
+Debug: 570 1146 rp2040.c:687 setup_for_raw_flash_cmd(): Connecting flash IOs and issuing XIP exit sequence to flash
+Debug: 571 1146 rp2040.c:428 rp2xxx_call_rom_func_batch(): Calling batch of 2 ROM functions:
+Debug: 572 1146 rp2040.c:430 rp2xxx_call_rom_func_batch():   func @ 24a1
+Debug: 573 1146 rp2040.c:431 rp2xxx_call_rom_func_batch():     sp = 20010400
+Debug: 574 1146 rp2040.c:433 rp2xxx_call_rom_func_batch():     a0 = 0
+Debug: 575 1146 rp2040.c:433 rp2xxx_call_rom_func_batch():     a1 = 0
+Debug: 576 1146 rp2040.c:433 rp2xxx_call_rom_func_batch():     a2 = 0
+Debug: 577 1146 rp2040.c:433 rp2xxx_call_rom_func_batch():     a3 = 0
+Debug: 578 1146 rp2040.c:430 rp2xxx_call_rom_func_batch():   func @ 23f5
+Debug: 579 1146 rp2040.c:431 rp2xxx_call_rom_func_batch():     sp = 20010400
+Debug: 580 1146 rp2040.c:433 rp2xxx_call_rom_func_batch():     a0 = 0
+Debug: 581 1146 rp2040.c:433 rp2xxx_call_rom_func_batch():     a1 = 0
+Debug: 582 1146 rp2040.c:433 rp2xxx_call_rom_func_batch():     a2 = 0
+Debug: 583 1146 rp2040.c:433 rp2xxx_call_rom_func_batch():     a3 = 0
+Debug: 584 1146 rp2040.c:436 rp2xxx_call_rom_func_batch(): Calling on core "rp2040.core0"
+Debug: 585 1146 rp2040.c:449 rp2xxx_call_rom_func_batch(): Using algo: rp2xxx_rom_call_batch_algo_armv6m
+Debug: 586 1146 target.c:2345 target_write_buffer(): writing buffer of 32 byte at 0x20010400
+Debug: 587 1147 target.c:2345 target_write_buffer(): writing buffer of 48 byte at 0x20010420
+Debug: 588 1149 target.c:2651 target_write_u32(): address: 0x20010450, value: 0x00000000
+Debug: 589 1150 target.c:1775 target_call_event_callbacks(): target event 3 (resume-start) for core rp2040.core0
+Debug: 590 1150 armv7m.c:174 armv7m_restore_context():  
+Debug: 591 1151 armv7m.c:441 armv7m_write_core_reg(): write pmsk_bpri_fltmsk_ctrl value 0x00000001
+Debug: 592 1152 armv7m.c:441 armv7m_write_core_reg(): write msp value 0x20041f00
+Debug: 593 1153 armv7m.c:441 armv7m_write_core_reg(): write xpsr value 0x01000000
+Debug: 594 1154 armv7m.c:441 armv7m_write_core_reg(): write pc value 0x20010400
+Debug: 595 1155 armv7m.c:441 armv7m_write_core_reg(): write lr value 0xffffffff
+Debug: 596 1156 armv7m.c:441 armv7m_write_core_reg(): write sp value 0x20041f00
+Debug: 597 1157 armv7m.c:441 armv7m_write_core_reg(): write r12 value 0xffffffff
+Debug: 598 1158 armv7m.c:441 armv7m_write_core_reg(): write r7 value 0xffffffff
+Debug: 599 1159 armv7m.c:441 armv7m_write_core_reg(): write r5 value 0xffffffff
+Debug: 600 1160 armv7m.c:441 armv7m_write_core_reg(): write r4 value 0xffffffff
+Debug: 601 1161 armv7m.c:441 armv7m_write_core_reg(): write r3 value 0xffffffff
+Debug: 602 1162 armv7m.c:441 armv7m_write_core_reg(): write r2 value 0xffffffff
+Debug: 603 1163 armv7m.c:441 armv7m_write_core_reg(): write r1 value 0xffffffff
+Debug: 604 1164 armv7m.c:441 armv7m_write_core_reg(): write r0 value 0xffffffff
+Debug: 605 1165 target.c:1775 target_call_event_callbacks(): target event 18 (debug-resumed) for core rp2040.core0
+Debug: 606 1165 cortex_m.c:1384 cortex_m_resume(): [rp2040.core0] debug resumed at 0x20010400
+Debug: 607 1165 target.c:1775 target_call_event_callbacks(): target event 4 (resume-end) for core rp2040.core0
+Debug: 608 1166 cortex_m.c:809 cortex_m_debug_entry(): [rp2040.core0]  
+Debug: 609 1169 cortex_m.c:550 cortex_m_clear_halt(): [rp2040.core0] NVIC_DFSR 0x3
+Debug: 610 1181 cortex_m.c:352 cortex_m_fast_read_all_regs(): [rp2040.core0] read 20 32-bit registers
+Debug: 611 1181 cortex_m.c:879 cortex_m_debug_entry(): [rp2040.core0] entered debug state in core mode: Thread at PC 0x2001041e, cpu in Non-Secure state, target->state: halted
+Debug: 612 1181 target.c:1775 target_call_event_callbacks(): target event 17 (debug-halted) for core rp2040.core0
+Debug: 613 1181 armv7m.c:704 armv7m_wait_algorithm(): restoring register primask with value 0x00000000
+Debug: 614 1181 armv7m.c:704 armv7m_wait_algorithm(): restoring register pmsk_bpri_fltmsk_ctrl with value 0x00000000
+Debug: 615 1181 armv7m.c:704 armv7m_wait_algorithm(): restoring register msp with value 0x20041f00
+Debug: 616 1181 armv7m.c:704 armv7m_wait_algorithm(): restoring register xpsr with value 0xf1000000
+Debug: 617 1181 armv7m.c:704 armv7m_wait_algorithm(): restoring register pc with value 0x000000ee
+Debug: 618 1181 armv7m.c:704 armv7m_wait_algorithm(): restoring register lr with value 0xffffffff
+Debug: 619 1181 armv7m.c:704 armv7m_wait_algorithm(): restoring register sp with value 0x20041f00
+Debug: 620 1181 armv7m.c:704 armv7m_wait_algorithm(): restoring register r12 with value 0xffffffff
+Debug: 621 1181 armv7m.c:704 armv7m_wait_algorithm(): restoring register r7 with value 0xffffffff
+Debug: 622 1181 armv7m.c:704 armv7m_wait_algorithm(): restoring register r5 with value 0xffffffff
+Debug: 623 1181 armv7m.c:704 armv7m_wait_algorithm(): restoring register r4 with value 0xffffffff
+Debug: 624 1181 armv7m.c:704 armv7m_wait_algorithm(): restoring register r3 with value 0xffffffff
+Debug: 625 1181 armv7m.c:704 armv7m_wait_algorithm(): restoring register r2 with value 0xffffffff
+Debug: 626 1181 armv7m.c:704 armv7m_wait_algorithm(): restoring register r1 with value 0xffffffff
+Debug: 627 1181 armv7m.c:704 armv7m_wait_algorithm(): restoring register r0 with value 0xffffffff
+Debug: 628 1181 target.c:2034 target_alloc_working_area_try(): allocated new working area of 63488 bytes at address 0x20010800
+Debug: 629 3003 target.c:1901 print_wa_layout(): b* 0x20010000-0x200103ff (1024 bytes)
+Debug: 630 3003 target.c:1901 print_wa_layout(): b* 0x20010400-0x200107ff (1024 bytes)
+Debug: 631 3003 target.c:1901 print_wa_layout(): b* 0x20010800-0x2001ffff (63488 bytes)
+Debug: 632 3003 rp2040.c:745 rp2040_flash_write(): Allocated flash bounce buffer @0x20010800
+Debug: 633 3003 rp2040.c:749 rp2040_flash_write(): Writing 37120 bytes to offset 0x0
+Debug: 634 3003 target.c:2345 target_write_buffer(): writing buffer of 37120 byte at 0x20010800
+Debug: 635 4048 rp2040.c:428 rp2xxx_call_rom_func_batch(): Calling batch of 1 ROM functions:
+Debug: 636 4048 rp2040.c:430 rp2xxx_call_rom_func_batch():   func @ 23c5
+Debug: 637 4048 rp2040.c:431 rp2xxx_call_rom_func_batch():     sp = 20010400
+Debug: 638 4048 rp2040.c:433 rp2xxx_call_rom_func_batch():     a0 = 0
+Debug: 639 4048 rp2040.c:433 rp2xxx_call_rom_func_batch():     a1 = 20010800
+Debug: 640 4048 rp2040.c:433 rp2xxx_call_rom_func_batch():     a2 = 9100
+Debug: 641 4048 rp2040.c:433 rp2xxx_call_rom_func_batch():     a3 = 0
+Debug: 642 4048 rp2040.c:436 rp2xxx_call_rom_func_batch(): Calling on core "rp2040.core0"
+Debug: 643 4048 rp2040.c:449 rp2xxx_call_rom_func_batch(): Using algo: rp2xxx_rom_call_batch_algo_armv6m
+Debug: 644 4048 target.c:2345 target_write_buffer(): writing buffer of 32 byte at 0x20010400
+Debug: 645 4049 target.c:2345 target_write_buffer(): writing buffer of 24 byte at 0x20010420
+Debug: 646 4050 target.c:2651 target_write_u32(): address: 0x20010438, value: 0x00000000
+Debug: 647 4051 target.c:1775 target_call_event_callbacks(): target event 3 (resume-start) for core rp2040.core0
+Debug: 648 4051 armv7m.c:174 armv7m_restore_context():  
+Debug: 649 4052 armv7m.c:441 armv7m_write_core_reg(): write pmsk_bpri_fltmsk_ctrl value 0x00000001
+Debug: 650 4053 armv7m.c:441 armv7m_write_core_reg(): write msp value 0x20041f00
+Debug: 651 4054 armv7m.c:441 armv7m_write_core_reg(): write xpsr value 0x01000000
+Debug: 652 4055 armv7m.c:441 armv7m_write_core_reg(): write pc value 0x20010400
+Debug: 653 4056 armv7m.c:441 armv7m_write_core_reg(): write lr value 0xffffffff
+Debug: 654 4057 armv7m.c:441 armv7m_write_core_reg(): write sp value 0x20041f00
+Debug: 655 4058 armv7m.c:441 armv7m_write_core_reg(): write r12 value 0xffffffff
+Debug: 656 4059 armv7m.c:441 armv7m_write_core_reg(): write r7 value 0xffffffff
+Debug: 657 4060 armv7m.c:441 armv7m_write_core_reg(): write r5 value 0xffffffff
+Debug: 658 4061 armv7m.c:441 armv7m_write_core_reg(): write r4 value 0xffffffff
+Debug: 659 4062 armv7m.c:441 armv7m_write_core_reg(): write r3 value 0xffffffff
+Debug: 660 4063 armv7m.c:441 armv7m_write_core_reg(): write r2 value 0xffffffff
+Debug: 661 4064 armv7m.c:441 armv7m_write_core_reg(): write r1 value 0xffffffff
+Debug: 662 4065 armv7m.c:441 armv7m_write_core_reg(): write r0 value 0xffffffff
+Debug: 663 4066 target.c:1775 target_call_event_callbacks(): target event 18 (debug-resumed) for core rp2040.core0
+Debug: 664 4066 cortex_m.c:1384 cortex_m_resume(): [rp2040.core0] debug resumed at 0x20010400
+Debug: 665 4066 target.c:1775 target_call_event_callbacks(): target event 4 (resume-end) for core rp2040.core0
+Debug: 666 4067 target.c:3224 target_wait_state(): waiting for target halted...
+Debug: 667 4130 cortex_m.c:809 cortex_m_debug_entry(): [rp2040.core0]  
+Debug: 668 4133 cortex_m.c:550 cortex_m_clear_halt(): [rp2040.core0] NVIC_DFSR 0x3
+Debug: 669 4145 cortex_m.c:352 cortex_m_fast_read_all_regs(): [rp2040.core0] read 20 32-bit registers
+Debug: 670 4145 cortex_m.c:879 cortex_m_debug_entry(): [rp2040.core0] entered debug state in core mode: Thread at PC 0x2001041e, cpu in Non-Secure state, target->state: halted
+Debug: 671 4145 target.c:1775 target_call_event_callbacks(): target event 17 (debug-halted) for core rp2040.core0
+Debug: 672 4145 armv7m.c:704 armv7m_wait_algorithm(): restoring register primask with value 0x00000000
+Debug: 673 4145 armv7m.c:704 armv7m_wait_algorithm(): restoring register pmsk_bpri_fltmsk_ctrl with value 0x00000000
+Debug: 674 4145 armv7m.c:704 armv7m_wait_algorithm(): restoring register msp with value 0x20041f00
+Debug: 675 4145 armv7m.c:704 armv7m_wait_algorithm(): restoring register xpsr with value 0xf1000000
+Debug: 676 4145 armv7m.c:704 armv7m_wait_algorithm(): restoring register pc with value 0x000000ee
+Debug: 677 4145 armv7m.c:704 armv7m_wait_algorithm(): restoring register lr with value 0xffffffff
+Debug: 678 4145 armv7m.c:704 armv7m_wait_algorithm(): restoring register sp with value 0x20041f00
+Debug: 679 4145 armv7m.c:704 armv7m_wait_algorithm(): restoring register r12 with value 0xffffffff
+Debug: 680 4145 armv7m.c:704 armv7m_wait_algorithm(): restoring register r7 with value 0xffffffff
+Debug: 681 4145 armv7m.c:704 armv7m_wait_algorithm(): restoring register r5 with value 0xffffffff
+Debug: 682 4145 armv7m.c:704 armv7m_wait_algorithm(): restoring register r4 with value 0xffffffff
+Debug: 683 4145 armv7m.c:704 armv7m_wait_algorithm(): restoring register r3 with value 0xffffffff
+Debug: 684 4145 armv7m.c:704 armv7m_wait_algorithm(): restoring register r2 with value 0xffffffff
+Debug: 685 4145 armv7m.c:704 armv7m_wait_algorithm(): restoring register r1 with value 0xffffffff
+Debug: 686 4145 armv7m.c:704 armv7m_wait_algorithm(): restoring register r0 with value 0xffffffff
+Debug: 687 4145 log.c:408 gdb_timeout_warning(): keep_alive() was not invoked in the 1000 ms timelimit (3118 ms). This may cause trouble with GDB connections.
+Debug: 688 5933 target.c:2102 target_free_working_area_restore(): freed 63488 bytes of working area at address 0x20010800
+Debug: 689 5933 target.c:1901 print_wa_layout(): b* 0x20010000-0x200103ff (1024 bytes)
+Debug: 690 5933 target.c:1901 print_wa_layout(): b* 0x20010400-0x200107ff (1024 bytes)
+Debug: 691 5933 target.c:1901 print_wa_layout(): b  0x20010800-0x2001ffff (63488 bytes)
+Debug: 692 5933 rp2040.c:784 rp2040_flash_write(): Flushing flash cache after write behind
+Debug: 693 5933 rp2040.c:428 rp2xxx_call_rom_func_batch(): Calling batch of 1 ROM functions:
+Debug: 694 5933 rp2040.c:430 rp2xxx_call_rom_func_batch():   func @ 2361
+Debug: 695 5933 rp2040.c:431 rp2xxx_call_rom_func_batch():     sp = 20010400
+Debug: 696 5933 rp2040.c:433 rp2xxx_call_rom_func_batch():     a0 = 0
+Debug: 697 5933 rp2040.c:433 rp2xxx_call_rom_func_batch():     a1 = 0
+Debug: 698 5933 rp2040.c:433 rp2xxx_call_rom_func_batch():     a2 = 0
+Debug: 699 5933 rp2040.c:433 rp2xxx_call_rom_func_batch():     a3 = 0
+Debug: 700 5933 rp2040.c:436 rp2xxx_call_rom_func_batch(): Calling on core "rp2040.core0"
+Debug: 701 5933 rp2040.c:449 rp2xxx_call_rom_func_batch(): Using algo: rp2xxx_rom_call_batch_algo_armv6m
+Debug: 702 5933 target.c:2345 target_write_buffer(): writing buffer of 32 byte at 0x20010400
+Debug: 703 5934 target.c:2345 target_write_buffer(): writing buffer of 24 byte at 0x20010420
+Debug: 704 5935 target.c:2651 target_write_u32(): address: 0x20010438, value: 0x00000000
+Debug: 705 5936 target.c:1775 target_call_event_callbacks(): target event 3 (resume-start) for core rp2040.core0
+Debug: 706 5936 armv7m.c:174 armv7m_restore_context():  
+Debug: 707 5937 armv7m.c:441 armv7m_write_core_reg(): write pmsk_bpri_fltmsk_ctrl value 0x00000001
+Debug: 708 5938 armv7m.c:441 armv7m_write_core_reg(): write msp value 0x20041f00
+Debug: 709 5939 armv7m.c:441 armv7m_write_core_reg(): write xpsr value 0x01000000
+Debug: 710 5940 armv7m.c:441 armv7m_write_core_reg(): write pc value 0x20010400
+Debug: 711 5941 armv7m.c:441 armv7m_write_core_reg(): write lr value 0xffffffff
+Debug: 712 5942 armv7m.c:441 armv7m_write_core_reg(): write sp value 0x20041f00
+Debug: 713 5943 armv7m.c:441 armv7m_write_core_reg(): write r12 value 0xffffffff
+Debug: 714 5944 armv7m.c:441 armv7m_write_core_reg(): write r7 value 0xffffffff
+Debug: 715 5945 armv7m.c:441 armv7m_write_core_reg(): write r5 value 0xffffffff
+Debug: 716 5946 armv7m.c:441 armv7m_write_core_reg(): write r4 value 0xffffffff
+Debug: 717 5947 armv7m.c:441 armv7m_write_core_reg(): write r3 value 0xffffffff
+Debug: 718 5948 armv7m.c:441 armv7m_write_core_reg(): write r2 value 0xffffffff
+Debug: 719 5949 armv7m.c:441 armv7m_write_core_reg(): write r1 value 0xffffffff
+Debug: 720 5950 armv7m.c:441 armv7m_write_core_reg(): write r0 value 0xffffffff
+Debug: 721 5951 target.c:1775 target_call_event_callbacks(): target event 18 (debug-resumed) for core rp2040.core0
+Debug: 722 5951 cortex_m.c:1384 cortex_m_resume(): [rp2040.core0] debug resumed at 0x20010400
+Debug: 723 5951 target.c:1775 target_call_event_callbacks(): target event 4 (resume-end) for core rp2040.core0
+Debug: 724 5952 cortex_m.c:809 cortex_m_debug_entry(): [rp2040.core0]  
+Debug: 725 5955 cortex_m.c:550 cortex_m_clear_halt(): [rp2040.core0] NVIC_DFSR 0x3
+Debug: 726 5967 cortex_m.c:352 cortex_m_fast_read_all_regs(): [rp2040.core0] read 20 32-bit registers
+Debug: 727 5967 cortex_m.c:879 cortex_m_debug_entry(): [rp2040.core0] entered debug state in core mode: Thread at PC 0x2001041e, cpu in Non-Secure state, target->state: halted
+Debug: 728 5967 target.c:1775 target_call_event_callbacks(): target event 17 (debug-halted) for core rp2040.core0
+Debug: 729 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register primask with value 0x00000000
+Debug: 730 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register pmsk_bpri_fltmsk_ctrl with value 0x00000000
+Debug: 731 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register msp with value 0x20041f00
+Debug: 732 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register xpsr with value 0xf1000000
+Debug: 733 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register pc with value 0x000000ee
+Debug: 734 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register lr with value 0xffffffff
+Debug: 735 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register sp with value 0x20041f00
+Debug: 736 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register r7 with value 0xffffffff
+Debug: 737 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register r5 with value 0xffffffff
+Debug: 738 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register r4 with value 0xffffffff
+Debug: 739 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register r3 with value 0xffffffff
+Debug: 740 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register r2 with value 0xffffffff
+Debug: 741 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register r1 with value 0xffffffff
+Debug: 742 5967 armv7m.c:704 armv7m_wait_algorithm(): restoring register r0 with value 0xffffffff
+Debug: 743 5967 rp2040.c:428 rp2xxx_call_rom_func_batch(): Calling batch of 2 ROM functions:
+Debug: 744 5967 rp2040.c:430 rp2xxx_call_rom_func_batch():   func @ 2361
+Debug: 745 5967 rp2040.c:431 rp2xxx_call_rom_func_batch():     sp = 20010400
+Debug: 746 5967 rp2040.c:433 rp2xxx_call_rom_func_batch():     a0 = 0
+Debug: 747 5967 rp2040.c:433 rp2xxx_call_rom_func_batch():     a1 = 0
+Debug: 748 5967 rp2040.c:433 rp2xxx_call_rom_func_batch():     a2 = 0
+Debug: 749 5967 rp2040.c:433 rp2xxx_call_rom_func_batch():     a3 = 0
+Debug: 750 5967 rp2040.c:430 rp2xxx_call_rom_func_batch():   func @ 2331
+Debug: 751 5967 rp2040.c:431 rp2xxx_call_rom_func_batch():     sp = 20010400
+Debug: 752 5967 rp2040.c:433 rp2xxx_call_rom_func_batch():     a0 = 0
+Debug: 753 5967 rp2040.c:433 rp2xxx_call_rom_func_batch():     a1 = 0
+Debug: 754 5967 rp2040.c:433 rp2xxx_call_rom_func_batch():     a2 = 0
+Debug: 755 5967 rp2040.c:433 rp2xxx_call_rom_func_batch():     a3 = 0
+Debug: 756 5967 rp2040.c:436 rp2xxx_call_rom_func_batch(): Calling on core "rp2040.core0"
+Debug: 757 5967 rp2040.c:449 rp2xxx_call_rom_func_batch(): Using algo: rp2xxx_rom_call_batch_algo_armv6m
+Debug: 758 5967 target.c:2345 target_write_buffer(): writing buffer of 32 byte at 0x20010400
+Debug: 759 5969 target.c:2345 target_write_buffer(): writing buffer of 48 byte at 0x20010420
+Debug: 760 5971 target.c:2651 target_write_u32(): address: 0x20010450, value: 0x00000000
+Debug: 761 5972 target.c:1775 target_call_event_callbacks(): target event 3 (resume-start) for core rp2040.core0
+Debug: 762 5972 armv7m.c:174 armv7m_restore_context():  
+Debug: 763 5973 armv7m.c:441 armv7m_write_core_reg(): write pmsk_bpri_fltmsk_ctrl value 0x00000001
+Debug: 764 5974 armv7m.c:441 armv7m_write_core_reg(): write msp value 0x20041f00
+Debug: 765 5975 armv7m.c:441 armv7m_write_core_reg(): write xpsr value 0x01000000
+Debug: 766 5976 armv7m.c:441 armv7m_write_core_reg(): write pc value 0x20010400
+Debug: 767 5977 armv7m.c:441 armv7m_write_core_reg(): write lr value 0xffffffff
+Debug: 768 5978 armv7m.c:441 armv7m_write_core_reg(): write sp value 0x20041f00
+Debug: 769 5979 armv7m.c:441 armv7m_write_core_reg(): write r7 value 0xffffffff
+Debug: 770 5980 armv7m.c:441 armv7m_write_core_reg(): write r5 value 0xffffffff
+Debug: 771 5981 armv7m.c:441 armv7m_write_core_reg(): write r4 value 0xffffffff
+Debug: 772 5982 armv7m.c:441 armv7m_write_core_reg(): write r3 value 0xffffffff
+Debug: 773 5983 armv7m.c:441 armv7m_write_core_reg(): write r2 value 0xffffffff
+Debug: 774 5984 armv7m.c:441 armv7m_write_core_reg(): write r1 value 0xffffffff
+Debug: 775 5985 armv7m.c:441 armv7m_write_core_reg(): write r0 value 0xffffffff
+Debug: 776 5986 target.c:1775 target_call_event_callbacks(): target event 18 (debug-resumed) for core rp2040.core0
+Debug: 777 5986 cortex_m.c:1384 cortex_m_resume(): [rp2040.core0] debug resumed at 0x20010400
+Debug: 778 5986 target.c:1775 target_call_event_callbacks(): target event 4 (resume-end) for core rp2040.core0
+Debug: 779 5987 cortex_m.c:809 cortex_m_debug_entry(): [rp2040.core0]  
+Debug: 780 5990 cortex_m.c:550 cortex_m_clear_halt(): [rp2040.core0] NVIC_DFSR 0x3
+Debug: 781 6002 cortex_m.c:352 cortex_m_fast_read_all_regs(): [rp2040.core0] read 20 32-bit registers
+Debug: 782 6002 cortex_m.c:879 cortex_m_debug_entry(): [rp2040.core0] entered debug state in core mode: Thread at PC 0x2001041e, cpu in Non-Secure state, target->state: halted
+Debug: 783 6002 target.c:1775 target_call_event_callbacks(): target event 17 (debug-halted) for core rp2040.core0
+Debug: 784 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register primask with value 0x00000000
+Debug: 785 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register pmsk_bpri_fltmsk_ctrl with value 0x00000000
+Debug: 786 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register msp with value 0x20041f00
+Debug: 787 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register xpsr with value 0xf1000000
+Debug: 788 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register pc with value 0x000000ee
+Debug: 789 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register lr with value 0xffffffff
+Debug: 790 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register sp with value 0x20041f00
+Debug: 791 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register r7 with value 0xffffffff
+Debug: 792 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register r5 with value 0xffffffff
+Debug: 793 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register r4 with value 0xffffffff
+Debug: 794 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register r3 with value 0xffffffff
+Debug: 795 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register r2 with value 0xffffffff
+Debug: 796 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register r1 with value 0xffffffff
+Debug: 797 6002 armv7m.c:704 armv7m_wait_algorithm(): restoring register r0 with value 0xffffffff
+Debug: 798 6002 rp2040.c:712 cleanup_after_raw_flash_cmd(): Cleaning up after flash operations
+Debug: 799 6032 target.c:2102 target_free_working_area_restore(): freed 1024 bytes of working area at address 0x20010000
+Debug: 800 6032 target.c:1901 print_wa_layout(): b  0x20010000-0x200103ff (1024 bytes)
+Debug: 801 6032 target.c:1901 print_wa_layout(): b* 0x20010400-0x200107ff (1024 bytes)
+Debug: 802 6032 target.c:1901 print_wa_layout(): b  0x20010800-0x2001ffff (63488 bytes)
+Debug: 803 6061 target.c:2102 target_free_working_area_restore(): freed 1024 bytes of working area at address 0x20010400
+Debug: 804 6061 target.c:1901 print_wa_layout():    0x20010000-0x2001ffff (65536 bytes)
+Debug: 805 6061 command.c:153 script_debug(): command - echo ** Programming Finished **
+Debug: 806 6061 log.c:408 gdb_timeout_warning(): keep_alive() was not invoked in the 1000 ms timelimit (1916 ms). This may cause trouble with GDB connections.
+User : 807 6066 command.c:678 handle_echo(): ** Programming Finished **
+Debug: 808 6066 command.c:153 script_debug(): command - echo ** Verify Started **
+User : 809 6066 command.c:678 handle_echo(): ** Verify Started **
+Debug: 810 6066 command.c:153 script_debug(): command - verify_image main.elf
+Debug: 811 6066 configuration.c:88 find_file(): found main.elf
+Debug: 812 6066 image.c:69 autodetect_image_type(): ELF image detected.
+Debug: 813 6066 configuration.c:88 find_file(): found main.elf
+Debug: 814 6066 image.c:638 image_elf_read_headers(): ELF32 image detected.
+Debug: 815 6066 image.c:667 image_elf32_read_section(): load segment 0 at 0x0 (sz = 0x8060)
+Debug: 816 6066 image.c:673 image_elf32_read_section(): read elf: size = 0x8060 at 0x1000
+Debug: 817 6066 image.c:1271 image_calculate_checksum(): Calculating checksum
+Debug: 818 6066 image.c:1303 image_calculate_checksum(): Calculating checksum done; checksum=0xd288cc2d
+Debug: 819 6066 target.c:2034 target_alloc_working_area_try(): allocated new working area of 52 bytes at address 0x20010000
+Debug: 820 6071 target.c:1901 print_wa_layout(): b* 0x20010000-0x20010033 (52 bytes)
+Debug: 821 6071 target.c:1901 print_wa_layout():    0x20010034-0x2001ffff (65484 bytes)
+Debug: 822 6071 target.c:2345 target_write_buffer(): writing buffer of 52 byte at 0x20010000
+Debug: 823 6073 target.c:1775 target_call_event_callbacks(): target event 3 (resume-start) for core rp2040.core0
+Debug: 824 6073 armv7m.c:174 armv7m_restore_context():  
+Debug: 825 6074 armv7m.c:441 armv7m_write_core_reg(): write pmsk_bpri_fltmsk_ctrl value 0x00000001
+Debug: 826 6075 armv7m.c:441 armv7m_write_core_reg(): write msp value 0x20041f00
+Debug: 827 6076 armv7m.c:441 armv7m_write_core_reg(): write xpsr value 0x01000000
+Debug: 828 6077 armv7m.c:441 armv7m_write_core_reg(): write pc value 0x20010000
+Debug: 829 6078 armv7m.c:441 armv7m_write_core_reg(): write lr value 0xffffffff
+Debug: 830 6079 armv7m.c:441 armv7m_write_core_reg(): write sp value 0x20041f00
+Debug: 831 6080 armv7m.c:441 armv7m_write_core_reg(): write r7 value 0xffffffff
+Debug: 832 6081 armv7m.c:441 armv7m_write_core_reg(): write r5 value 0xffffffff
+Debug: 833 6082 armv7m.c:441 armv7m_write_core_reg(): write r4 value 0xffffffff
+Debug: 834 6083 armv7m.c:441 armv7m_write_core_reg(): write r3 value 0xffffffff
+Debug: 835 6084 armv7m.c:441 armv7m_write_core_reg(): write r2 value 0xffffffff
+Debug: 836 6085 armv7m.c:441 armv7m_write_core_reg(): write r1 value 0x00008060
+Debug: 837 6086 armv7m.c:441 armv7m_write_core_reg(): write r0 value 0x10000000
+Debug: 838 6087 target.c:1775 target_call_event_callbacks(): target event 18 (debug-resumed) for core rp2040.core0
+Debug: 839 6087 cortex_m.c:1384 cortex_m_resume(): [rp2040.core0] debug resumed at 0x20010000
+Debug: 840 6087 target.c:1775 target_call_event_callbacks(): target event 4 (resume-end) for core rp2040.core0
+Debug: 841 6088 target.c:3224 target_wait_state(): waiting for target halted...
+Debug: 842 6136 cortex_m.c:809 cortex_m_debug_entry(): [rp2040.core0]  
+Debug: 843 6139 cortex_m.c:550 cortex_m_clear_halt(): [rp2040.core0] NVIC_DFSR 0x3
+Debug: 844 6151 cortex_m.c:352 cortex_m_fast_read_all_regs(): [rp2040.core0] read 20 32-bit registers
+Debug: 845 6151 cortex_m.c:879 cortex_m_debug_entry(): [rp2040.core0] entered debug state in core mode: Thread at PC 0x2001002e, cpu in Non-Secure state, target->state: halted
+Debug: 846 6151 target.c:1775 target_call_event_callbacks(): target event 17 (debug-halted) for core rp2040.core0
+Debug: 847 6151 armv7m.c:704 armv7m_wait_algorithm(): restoring register primask with value 0x00000000
+Debug: 848 6151 armv7m.c:704 armv7m_wait_algorithm(): restoring register pmsk_bpri_fltmsk_ctrl with value 0x00000000
+Debug: 849 6151 armv7m.c:704 armv7m_wait_algorithm(): restoring register xpsr with value 0xf1000000
+Debug: 850 6151 armv7m.c:704 armv7m_wait_algorithm(): restoring register pc with value 0x000000ee
+Debug: 851 6151 armv7m.c:704 armv7m_wait_algorithm(): restoring register r6 with value 0xffffffff
+Debug: 852 6151 armv7m.c:704 armv7m_wait_algorithm(): restoring register r5 with value 0xffffffff
+Debug: 853 6151 armv7m.c:704 armv7m_wait_algorithm(): restoring register r4 with value 0xffffffff
+Debug: 854 6151 armv7m.c:704 armv7m_wait_algorithm(): restoring register r3 with value 0xffffffff
+Debug: 855 6151 armv7m.c:704 armv7m_wait_algorithm(): restoring register r2 with value 0xffffffff
+Debug: 856 6151 armv7m.c:704 armv7m_wait_algorithm(): restoring register r1 with value 0xffffffff
+Debug: 857 6151 armv7m.c:704 armv7m_wait_algorithm(): restoring register r0 with value 0xffffffff
+Debug: 858 6153 target.c:2102 target_free_working_area_restore(): freed 52 bytes of working area at address 0x20010000
+Debug: 859 6153 target.c:1901 print_wa_layout():    0x20010000-0x2001ffff (65536 bytes)
+Debug: 860 6153 image.c:667 image_elf32_read_section(): load segment 1 at 0x0 (sz = 0xfc8)
+Debug: 861 6153 image.c:673 image_elf32_read_section(): read elf: size = 0xfc8 at 0x90c0
+Debug: 862 6153 image.c:1271 image_calculate_checksum(): Calculating checksum
+Debug: 863 6153 image.c:1303 image_calculate_checksum(): Calculating checksum done; checksum=0xe8be3969
+Debug: 864 6153 target.c:2034 target_alloc_working_area_try(): allocated new working area of 52 bytes at address 0x20010000
+Debug: 865 6155 target.c:1901 print_wa_layout(): b* 0x20010000-0x20010033 (52 bytes)
+Debug: 866 6155 target.c:1901 print_wa_layout():    0x20010034-0x2001ffff (65484 bytes)
+Debug: 867 6155 target.c:2345 target_write_buffer(): writing buffer of 52 byte at 0x20010000
+Debug: 868 6157 target.c:1775 target_call_event_callbacks(): target event 3 (resume-start) for core rp2040.core0
+Debug: 869 6157 armv7m.c:174 armv7m_restore_context():  
+Debug: 870 6158 armv7m.c:441 armv7m_write_core_reg(): write pmsk_bpri_fltmsk_ctrl value 0x00000001
+Debug: 871 6159 armv7m.c:441 armv7m_write_core_reg(): write xpsr value 0x01000000
+Debug: 872 6160 armv7m.c:441 armv7m_write_core_reg(): write pc value 0x20010000
+Debug: 873 6161 armv7m.c:441 armv7m_write_core_reg(): write r6 value 0xffffffff
+Debug: 874 6162 armv7m.c:441 armv7m_write_core_reg(): write r5 value 0xffffffff
+Debug: 875 6163 armv7m.c:441 armv7m_write_core_reg(): write r4 value 0xffffffff
+Debug: 876 6164 armv7m.c:441 armv7m_write_core_reg(): write r3 value 0xffffffff
+Debug: 877 6165 armv7m.c:441 armv7m_write_core_reg(): write r2 value 0xffffffff
+Debug: 878 6166 armv7m.c:441 armv7m_write_core_reg(): write r1 value 0x00000fc8
+Debug: 879 6167 armv7m.c:441 armv7m_write_core_reg(): write r0 value 0x10008060
+Debug: 880 6168 target.c:1775 target_call_event_callbacks(): target event 18 (debug-resumed) for core rp2040.core0
+Debug: 881 6168 cortex_m.c:1384 cortex_m_resume(): [rp2040.core0] debug resumed at 0x20010000
+Debug: 882 6168 target.c:1775 target_call_event_callbacks(): target event 4 (resume-end) for core rp2040.core0
+Debug: 883 6169 target.c:3224 target_wait_state(): waiting for target halted...
+Debug: 884 6174 cortex_m.c:809 cortex_m_debug_entry(): [rp2040.core0]  
+Debug: 885 6177 cortex_m.c:550 cortex_m_clear_halt(): [rp2040.core0] NVIC_DFSR 0x3
+Debug: 886 6189 cortex_m.c:352 cortex_m_fast_read_all_regs(): [rp2040.core0] read 20 32-bit registers
+Debug: 887 6189 cortex_m.c:879 cortex_m_debug_entry(): [rp2040.core0] entered debug state in core mode: Thread at PC 0x2001002e, cpu in Non-Secure state, target->state: halted
+Debug: 888 6189 target.c:1775 target_call_event_callbacks(): target event 17 (debug-halted) for core rp2040.core0
+Debug: 889 6189 armv7m.c:704 armv7m_wait_algorithm(): restoring register primask with value 0x00000000
+Debug: 890 6189 armv7m.c:704 armv7m_wait_algorithm(): restoring register pmsk_bpri_fltmsk_ctrl with value 0x00000000
+Debug: 891 6189 armv7m.c:704 armv7m_wait_algorithm(): restoring register xpsr with value 0xf1000000
+Debug: 892 6189 armv7m.c:704 armv7m_wait_algorithm(): restoring register pc with value 0x000000ee
+Debug: 893 6189 armv7m.c:704 armv7m_wait_algorithm(): restoring register r6 with value 0xffffffff
+Debug: 894 6189 armv7m.c:704 armv7m_wait_algorithm(): restoring register r5 with value 0xffffffff
+Debug: 895 6189 armv7m.c:704 armv7m_wait_algorithm(): restoring register r4 with value 0xffffffff
+Debug: 896 6189 armv7m.c:704 armv7m_wait_algorithm(): restoring register r3 with value 0xffffffff
+Debug: 897 6189 armv7m.c:704 armv7m_wait_algorithm(): restoring register r2 with value 0xffffffff
+Debug: 898 6189 armv7m.c:704 armv7m_wait_algorithm(): restoring register r1 with value 0xffffffff
+Debug: 899 6189 armv7m.c:704 armv7m_wait_algorithm(): restoring register r0 with value 0xffffffff
+Debug: 900 6191 target.c:2102 target_free_working_area_restore(): freed 52 bytes of working area at address 0x20010000
+Debug: 901 6191 target.c:1901 print_wa_layout():    0x20010000-0x2001ffff (65536 bytes)
+Debug: 902 6191 command.c:153 script_debug(): command - echo ** Verified OK **
+User : 903 6196 command.c:678 handle_echo(): ** Verified OK **
+Debug: 904 6196 command.c:153 script_debug(): command - poll off
+Debug: 905 6196 command.c:153 script_debug(): command - echo ** Resetting Target **
+User : 906 6196 command.c:678 handle_echo(): ** Resetting Target **
+Debug: 907 6196 command.c:153 script_debug(): command - reset run
+Debug: 908 6196 target.c:1794 target_call_reset_callbacks(): target reset 1 (run)
+Debug: 909 6196 target.c:1794 target_call_reset_callbacks(): target reset 1 (run)
+Debug: 910 6196 command.c:153 script_debug(): command - target names
+Debug: 911 6196 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-start
+Debug: 912 6196 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-start
+Debug: 913 6196 command.c:153 script_debug(): command - transport select
+Debug: 914 6196 command.c:153 script_debug(): command - transport select
+Debug: 915 6196 command.c:153 script_debug(): command - rp2040.core0 invoke-event examine-start
+Debug: 916 6196 command.c:153 script_debug(): command - rp2040.core0 arp_examine allow-defer
+Debug: 917 6200 arm_adi_v5.c:933 mem_ap_init(): MEM_AP CFG: large data 0, long address 0, big-endian 0
+Debug: 918 6200 command.c:153 script_debug(): command - rp2040.core0 invoke-event examine-end
+Debug: 919 6200 command.c:153 script_debug(): command - transport select
+Debug: 920 6200 command.c:153 script_debug(): command - rp2040.core1 invoke-event examine-start
+Debug: 921 6200 command.c:153 script_debug(): command - rp2040.core1 arp_examine allow-defer
+Debug: 922 6204 arm_adi_v5.c:933 mem_ap_init(): MEM_AP CFG: large data 0, long address 0, big-endian 0
+Debug: 923 6204 command.c:153 script_debug(): command - rp2040.core1 invoke-event examine-end
+Debug: 924 6204 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-assert-pre
+Debug: 925 6204 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-assert-pre
+Debug: 926 6204 command.c:153 script_debug(): command - transport select
+Debug: 927 6204 command.c:153 script_debug(): command - rp2040.core0 arp_reset assert 0
+Debug: 928 6204 target.c:2131 target_free_all_working_areas_restore(): freeing all working areas
+Debug: 929 6204 target.c:1901 print_wa_layout():    0x20010000-0x2001ffff (65536 bytes)
+Debug: 930 6204 cortex_m.c:1593 cortex_m_assert_reset(): [rp2040.core0] target->state: halted, examined
+Debug: 931 6211 cortex_m.c:550 cortex_m_clear_halt(): [rp2040.core0] NVIC_DFSR 0x1
+Debug: 932 6212 cortex_m.c:1708 cortex_m_assert_reset(): [rp2040.core0] Using Cortex-M SYSRESETREQ
+Debug: 933 6213 arm_adi_v5.c:857 dap_dp_init_or_reconnect(): rp2040.dap0
+Debug: 934 6214 arm_adi_v5.c:783 dap_dp_init(): rp2040.dap0
+Debug: 935 6214 arm_adi_v5.c:814 dap_dp_init(): DAP: wait CDBGPWRUPACK
+Debug: 936 6214 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x20000000, value 0x20000000
+Debug: 937 6215 arm_adi_v5.c:822 dap_dp_init(): DAP: wait CSYSPWRUPACK
+Debug: 938 6215 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x80000000, value 0x80000000
+Debug: 939 6216 cmsis_dap.c:845 cmsis_dap_swd_write_from_queue(): refusing to enable sticky overrun detection
+Debug: 940 6268 command.c:153 script_debug(): command - transport select
+Debug: 941 6268 command.c:153 script_debug(): command - rp2040.core1 arp_reset assert 0
+Debug: 942 6268 target.c:2131 target_free_all_working_areas_restore(): freeing all working areas
+Debug: 943 6268 cortex_m.c:1593 cortex_m_assert_reset(): [rp2040.core1] target->state: halted, examined
+Debug: 944 6275 cortex_m.c:550 cortex_m_clear_halt(): [rp2040.core1] NVIC_DFSR 0x1
+Debug: 945 6276 cortex_m.c:1708 cortex_m_assert_reset(): [rp2040.core1] Using Cortex-M SYSRESETREQ
+Debug: 946 6277 arm_adi_v5.c:857 dap_dp_init_or_reconnect(): rp2040.dap1
+Debug: 947 6278 arm_adi_v5.c:783 dap_dp_init(): rp2040.dap1
+Debug: 948 6278 arm_adi_v5.c:814 dap_dp_init(): DAP: wait CDBGPWRUPACK
+Debug: 949 6278 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x20000000, value 0x20000000
+Debug: 950 6279 arm_adi_v5.c:822 dap_dp_init(): DAP: wait CSYSPWRUPACK
+Debug: 951 6279 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x80000000, value 0x80000000
+Debug: 952 6280 cmsis_dap.c:845 cmsis_dap_swd_write_from_queue(): refusing to enable sticky overrun detection
+Debug: 953 6332 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-assert-post
+Debug: 954 6332 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-assert-post
+Debug: 955 6332 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-deassert-pre
+Debug: 956 6332 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-deassert-pre
+Debug: 957 6332 command.c:153 script_debug(): command - transport select
+Debug: 958 6332 command.c:153 script_debug(): command - rp2040.core0 arp_reset deassert 0
+Debug: 959 6332 target.c:2131 target_free_all_working_areas_restore(): freeing all working areas
+Debug: 960 6332 target.c:1901 print_wa_layout():    0x20010000-0x2001ffff (65536 bytes)
+Debug: 961 6332 cortex_m.c:1751 cortex_m_deassert_reset(): [rp2040.core0] target->state: reset, examined
+Debug: 962 6332 command.c:153 script_debug(): command - transport select
+Debug: 963 6332 command.c:153 script_debug(): command - rp2040.core1 arp_reset deassert 0
+Debug: 964 6332 target.c:2131 target_free_all_working_areas_restore(): freeing all working areas
+Debug: 965 6332 cortex_m.c:1751 cortex_m_deassert_reset(): [rp2040.core1] target->state: reset, examined
+Debug: 966 6332 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-deassert-post
+Debug: 967 6332 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-deassert-post
+Debug: 968 6332 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-end
+Debug: 969 6332 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-end
+Debug: 970 6332 command.c:153 script_debug(): command - shutdown
+User : 971 6332 server.c:758 handle_shutdown_command(): shutdown command invoked
+Debug: 972 6332 breakpoints.c:328 breakpoint_remove_all_internal(): [rp2040.core0] Delete all breakpoints
+Debug: 973 6332 breakpoints.c:328 breakpoint_remove_all_internal(): [rp2040.core1] Delete all breakpoints
+Debug: 974 6332 arm_adi_v5.c:1217 dap_put_ap(): refcount AP#0x0 put 0
+Debug: 975 6332 target.c:2131 target_free_all_working_areas_restore(): freeing all working areas
+Debug: 976 6332 target.c:1901 print_wa_layout():    0x20010000-0x2001ffff (65536 bytes)
+Debug: 977 6332 breakpoints.c:328 breakpoint_remove_all_internal(): [rp2040.core1] Delete all breakpoints
+Debug: 978 6332 arm_adi_v5.c:1217 dap_put_ap(): refcount AP#0x0 put 0
+Debug: 979 6332 target.c:2131 target_free_all_working_areas_restore(): freeing all working areas
+Debug: 980 6333 cmsis_dap.c:1267 cmsis_dap_swd_switch_seq(): SWD-to-DORMANT
