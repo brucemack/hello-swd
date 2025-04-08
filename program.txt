@@ -246,6 +246,7 @@ Debug: 244 285 target.c:1775 target_call_event_callbacks(): target event 1 (halt
 User : 245 285 armv7m.c:741 armv7m_arch_state(): [rp2040.core1] halted due to debug-request, current mode: Thread 
 xPSR: 0xf1000000 pc: 0x000000ee msp: 0x20041f00
 Debug: 246 285 command.c:153 script_debug(): command - rp2040.core1 curstate
+
 Debug: 247 285 command.c:153 script_debug(): command - transport select
 Debug: 248 285 command.c:153 script_debug(): command - rp2040.core0 was_examined
 Debug: 249 285 command.c:153 script_debug(): command - rp2040.core0 arp_waitstate halted 5000
@@ -254,8 +255,10 @@ Debug: 251 289 command.c:153 script_debug(): command - transport select
 Debug: 252 289 command.c:153 script_debug(): command - rp2040.core1 was_examined
 Debug: 253 289 command.c:153 script_debug(): command - rp2040.core1 arp_waitstate halted 5000
 Debug: 254 292 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-init
+
 Debug: 255 293 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-end
 Debug: 256 293 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-end
+
 Debug: 257 301 command.c:153 script_debug(): command - echo ** Programming Started **
 User : 258 301 command.c:678 handle_echo(): ** Programming Started **
 Debug: 259 301 command.c:153 script_debug(): command - flash write_image erase main.elf
@@ -406,6 +409,8 @@ Debug: 385 414 target.c:2587 target_read_u16(): address: 0x000000be, value: 0x58
 Debug: 386 415 target.c:2587 target_read_u16(): address: 0x000000c0, value: 0x2331
 Debug: 387 416 rp2040.c:207 rp2040_lookup_rom_symbol():  -> found: 0x2331
 
+>>>> Sme for SR, but not found
+
 Debug: 388 416 target.c:2563 target_read_u32(): address: 0x00000010, value: 0x0201754d
 Debug: 389 416 rp2040.c:183 rp2040_lookup_rom_symbol(): Looking up ROM symbol 'SR' in RP2040 table
 Debug: 390 417 target.c:2587 target_read_u16(): address: 0x00000014, value: 0x007a
@@ -430,6 +435,8 @@ Debug: 408 435 target.c:2587 target_read_u16(): address: 0x000000be, value: 0x58
 Debug: 409 436 target.c:2587 target_read_u16(): address: 0x000000c2, value: 0x4345
 Debug: 410 437 target.c:2587 target_read_u16(): address: 0x000000c6, value: 0x0000
 Warn : 411 438 rp2040.c:397 rp2xxx_populate_rom_pointer_cache(): Function FUNC_BOOTROM_STATE_RESET not found in RP2xxx ROM. (probably an RP2040 or an RP2350 A0)
+
+>>>> Same for RA, but not found
 
 Debug: 412 438 target.c:2563 target_read_u32(): address: 0x00000010, value: 0x0201754d
 Debug: 413 439 rp2040.c:183 rp2040_lookup_rom_symbol(): Looking up ROM symbol 'RA' in RP2040 table
@@ -456,21 +463,36 @@ Debug: 433 458 target.c:2587 target_read_u16(): address: 0x000000c2, value: 0x43
 Debug: 434 459 target.c:2587 target_read_u16(): address: 0x000000c6, value: 0x0000
 Warn : 435 460 rp2040.c:403 rp2xxx_populate_rom_pointer_cache(): Function FUNC_FLASH_RESET_ADDRESS_TRANS not found in RP2xxx ROM. (probably an RP2040 or an RP2350 A0)
 
-
-
+>>>> Did we query the device here?
 
 Info : 436 460 rp2040.c:898 rp2040_flash_probe(): RP2040 Flash Probe: 33554432 bytes @0x10000000, in 8192 sectors
 
+>>>> Readelf indicates that segments 0 + 1 are 36,904 bytes long.
+>>>> 36,904 needs to be padded with 216 bytes to make an even multiple of 256 (37,120).
+
 Info : 437 460 core.c:869 flash_write_unlock_verify(): Padding image section 1 at 0x10009028 with 216 bytes (bank write end alignment)
+
+>>>> Loading the two segments from the ELF
+
 Debug: 438 460 core.c:926 flash_write_unlock_verify(): image_read_section: section = 0, t_section_num = 0, section_offset = 0, buffer_idx = 0, size_read = 32864
 Debug: 439 460 image.c:667 image_elf32_read_section(): load segment 0 at 0x0 (sz = 0x8060)
 Debug: 440 460 image.c:673 image_elf32_read_section(): read elf: size = 0x8060 at 0x1000
 Debug: 441 460 core.c:926 flash_write_unlock_verify(): image_read_section: section = 1, t_section_num = 1, section_offset = 0, buffer_idx = 32864, size_read = 4040
 Debug: 442 460 image.c:667 image_elf32_read_section(): load segment 1 at 0x0 (sz = 0xfc8)
 Debug: 443 460 image.c:673 image_elf32_read_section(): read elf: size = 0xfc8 at 0x90c0
+
+>>>> 0x9100 is the padded data length (37120).
+>>>> Padding out to 0x9fff brings this to a multiple of 4k (40960).
+>>>> Note that ROM function _flash_range_erase() "RE" requires the erase range to be 4096-aligned 
+>>>> with a length that is a multiple of 4096 bytes.
+
 Warn : 444 460 core.c:545 flash_iterate_address_range_inner(): Adding extra erase range, 0x10009100 .. 0x10009fff
 Debug: 445 460 rp2040.c:819 rp2040_flash_erase(): RP2040 erase 40960 bytes starting at 0x0
+
 Debug: 446 460 target.c:1980 target_alloc_working_area_try(): MMU disabled, using physical address for working memory 0x20010000
+
+>>>> Two allocations. Each time we see the remaining free area getting smaller.
+
 Debug: 447 460 target.c:2034 target_alloc_working_area_try(): allocated new working area of 1024 bytes at address 0x20010000
 Debug: 448 490 target.c:1901 print_wa_layout(): b* 0x20010000-0x200103ff (1024 bytes)
 Debug: 449 490 target.c:1901 print_wa_layout():    0x20010400-0x2001ffff (64512 bytes)
@@ -478,7 +500,11 @@ Debug: 450 490 target.c:2034 target_alloc_working_area_try(): allocated new work
 Debug: 451 520 target.c:1901 print_wa_layout(): b* 0x20010000-0x200103ff (1024 bytes)
 Debug: 452 520 target.c:1901 print_wa_layout(): b* 0x20010400-0x200107ff (1024 bytes)
 Debug: 453 520 target.c:1901 print_wa_layout():    0x20010800-0x2001ffff (63488 bytes)
+
 Debug: 454 520 rp2040.c:687 setup_for_raw_flash_cmd(): Connecting flash IOs and issuing XIP exit sequence to flash
+
+>>>> From above, the ROM function at 24a1 is "IF"  _connect_internal_flash()
+
 Debug: 455 520 rp2040.c:428 rp2xxx_call_rom_func_batch(): Calling batch of 2 ROM functions:
 Debug: 456 520 rp2040.c:430 rp2xxx_call_rom_func_batch():   func @ 24a1
 Debug: 457 520 rp2040.c:431 rp2xxx_call_rom_func_batch():     sp = 20010400
@@ -486,12 +512,18 @@ Debug: 458 520 rp2040.c:433 rp2xxx_call_rom_func_batch():     a0 = 0
 Debug: 459 520 rp2040.c:433 rp2xxx_call_rom_func_batch():     a1 = 0
 Debug: 460 520 rp2040.c:433 rp2xxx_call_rom_func_batch():     a2 = 0
 Debug: 461 520 rp2040.c:433 rp2xxx_call_rom_func_batch():     a3 = 0
+
+>>>> From above, the ROM function at 23f5 is "EX" _flash_exit_xip()
+
 Debug: 462 520 rp2040.c:430 rp2xxx_call_rom_func_batch():   func @ 23f5
 Debug: 463 520 rp2040.c:431 rp2xxx_call_rom_func_batch():     sp = 20010400
 Debug: 464 520 rp2040.c:433 rp2xxx_call_rom_func_batch():     a0 = 0
 Debug: 465 520 rp2040.c:433 rp2xxx_call_rom_func_batch():     a1 = 0
 Debug: 466 520 rp2040.c:433 rp2xxx_call_rom_func_batch():     a2 = 0
 Debug: 467 520 rp2040.c:433 rp2xxx_call_rom_func_batch():     a3 = 0
+
+>>>> All of this stuff relates to calling the functions.
+
 Debug: 468 520 rp2040.c:436 rp2xxx_call_rom_func_batch(): Calling on core "rp2040.core0"
 Debug: 469 520 rp2040.c:449 rp2xxx_call_rom_func_batch(): Using algo: rp2xxx_rom_call_batch_algo_armv6m
 Debug: 470 520 target.c:2345 target_write_buffer(): writing buffer of 32 byte at 0x20010400
@@ -525,6 +557,9 @@ Debug: 497 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register r3 with 
 Debug: 498 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register r2 with value 0xffffffff
 Debug: 499 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register r1 with value 0xffffffff
 Debug: 500 544 armv7m.c:704 armv7m_wait_algorithm(): restoring register r0 with value 0xffffffff
+
+>>>> From above, the ROM function at 0x237d is "RE" _flash_range_erase()
+
 Debug: 501 544 rp2040.c:845 rp2040_flash_erase():   Erase chunk: 0x00000000 -> 0x00009fff
 Debug: 502 544 rp2040.c:428 rp2xxx_call_rom_func_batch(): Calling batch of 1 ROM functions:
 Debug: 503 544 rp2040.c:430 rp2xxx_call_rom_func_batch():   func @ 237d
@@ -540,6 +575,10 @@ Debug: 512 545 target.c:2345 target_write_buffer(): writing buffer of 24 byte at
 Debug: 513 546 target.c:2651 target_write_u32(): address: 0x20010438, value: 0x00000000
 Debug: 514 547 target.c:1775 target_call_event_callbacks(): target event 3 (resume-start) for core rp2040.core0
 Debug: 515 548 armv7m.c:174 armv7m_restore_context():  
+
+>>>> More registers being updated here vs. previous function calls.  Possibly because there
+>>>> are parameters being passed?
+
 Debug: 516 549 armv7m.c:441 armv7m_write_core_reg(): write pmsk_bpri_fltmsk_ctrl value 0x00000001
 Debug: 517 550 armv7m.c:441 armv7m_write_core_reg(): write msp value 0x20041f00
 Debug: 518 551 armv7m.c:441 armv7m_write_core_reg(): write xpsr value 0x01000000
@@ -578,7 +617,12 @@ Debug: 550 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register r3 with
 Debug: 551 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register r2 with value 0xffffffff
 Debug: 552 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register r1 with value 0xffffffff
 Debug: 553 1027 armv7m.c:704 armv7m_wait_algorithm(): restoring register r0 with value 0xffffffff
+
+
 Debug: 554 1027 log.c:408 gdb_timeout_warning(): keep_alive() was not invoked in the 1000 ms timelimit (1027 ms). This may cause trouble with GDB connections.
+
+>>>> Heap management
+
 Debug: 555 1027 rp2040.c:712 cleanup_after_raw_flash_cmd(): Cleaning up after flash operations
 Debug: 556 1057 target.c:2102 target_free_working_area_restore(): freed 1024 bytes of working area at address 0x20010000
 Debug: 557 1057 target.c:1901 print_wa_layout(): b  0x20010000-0x200103ff (1024 bytes)
@@ -586,7 +630,14 @@ Debug: 558 1057 target.c:1901 print_wa_layout(): b* 0x20010400-0x200107ff (1024 
 Debug: 559 1057 target.c:1901 print_wa_layout():    0x20010800-0x2001ffff (63488 bytes)
 Debug: 560 1086 target.c:2102 target_free_working_area_restore(): freed 1024 bytes of working area at address 0x20010400
 Debug: 561 1086 target.c:1901 print_wa_layout():    0x20010000-0x2001ffff (65536 bytes)
+
+=============================================
+>>>> Here is where the flash data writing begins
+
 Debug: 562 1086 rp2040.c:727 rp2040_flash_write(): Writing 37120 bytes starting at 0x0
+
+>>>> Working area in SRAM allocated again
+
 Debug: 563 1086 target.c:2034 target_alloc_working_area_try(): allocated new working area of 1024 bytes at address 0x20010000
 Debug: 564 1116 target.c:1901 print_wa_layout(): b* 0x20010000-0x200103ff (1024 bytes)
 Debug: 565 1116 target.c:1901 print_wa_layout():    0x20010400-0x2001ffff (64512 bytes)
@@ -594,6 +645,9 @@ Debug: 566 1116 target.c:2034 target_alloc_working_area_try(): allocated new wor
 Debug: 567 1146 target.c:1901 print_wa_layout(): b* 0x20010000-0x200103ff (1024 bytes)
 Debug: 568 1146 target.c:1901 print_wa_layout(): b* 0x20010400-0x200107ff (1024 bytes)
 Debug: 569 1146 target.c:1901 print_wa_layout():    0x20010800-0x2001ffff (63488 bytes)
+
+>>>> Flash chip initialized again
+
 Debug: 570 1146 rp2040.c:687 setup_for_raw_flash_cmd(): Connecting flash IOs and issuing XIP exit sequence to flash
 Debug: 571 1146 rp2040.c:428 rp2xxx_call_rom_func_batch(): Calling batch of 2 ROM functions:
 Debug: 572 1146 rp2040.c:430 rp2xxx_call_rom_func_batch():   func @ 24a1
