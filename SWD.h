@@ -51,26 +51,57 @@ public:
         return _read(true, addr);
     }
 
-    std::expected<uint32_t, int> readAP2(uint32_t addr, uint32_t bank) {
-
-        // Place AP address and bank in DP SELECT register
-        uint32_t select_reg = 0;
-        select_reg |= (addr << 24);
-        select_reg |= (bank & 0b11110000);
-        if (writeDP(8, select_reg) != 0) {
-            printf("write1 failed\n");
-            return std::unexpected(-1);
+    /**
+     * Writes a 32-bit word into the processor memory space via the MEM-AP
+     * mechanism.  This involves seting the AP TAR register first and then 
+     * writing to the AP DRW register.
+     * 
+     * @param addr The processor address
+     * @param data The data to write
+     * @returns 0 on success.
+     * 
+     * IMPORTANT: This funciton assumes that the appropriate AP
+     * and AP register bank 0 have already been selected via a 
+     * previous DP SELECT call.  This function does not do those
+     * steps in order to save time.
+     */
+    int writeWordViaAP(uint32_t addr, uint32_t data) {
+        // Write to the AP TAR register. This is the memory address that we will 
+        // be reading/writing from/to.
+        if (const auto r = writeAP(0x4, addr); r != 0) {
+            return r;
         }
-
-        // Create the read, but data isn't available until next read
-        const auto r0 = readAP((bank & 0b1100)); 
-        if (!r0.has_value()) {
-            printf("read1 failed\n");
-            return std::unexpected(-1);
+        // Write to the AP DRW register
+        if (const auto r = writeAP(0xc, data); r != 0) {
+            return r;
+        } else {
+            return 0;
         }
+    }
 
-        // Read from the RDBUF to get the data
-        return readDP(0x0c);
+    /**
+     * IMPORTANT: This funciton assumes that the appropriate AP
+     * and AP register bank 0 have already been selected via a 
+     * previous DP SELECT call.  This function does not do those
+     * steps in order to save time.
+     */
+    std::expected<uint32_t, int> readWordViaAP(uint32_t addr) {
+
+        // Write to the AP TAR register. This is the memory address that we will 
+        // be reading/writing from/to.
+        if (const auto r = writeAP(0x4, addr); r != 0) {
+            return std::unexpected(r);
+        }
+        // Read from the AP DRW register (actual data is buffered and comes later)
+        if (const auto r = readAP(0xc); !r.has_value()) {
+            return std::unexpected(r.error());
+        }
+        // Fetch result of previous AP read
+        if (const auto r = readDP(0xc); !r.has_value()) {
+            return std::unexpected(r.error());
+        } else {
+            return *r;
+        }
     }
 
     void setDIO(bool h) { _setDIO(h); }

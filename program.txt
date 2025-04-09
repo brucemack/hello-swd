@@ -59,7 +59,6 @@ Debug: 57 42 arm_adi_v5.c:814 dap_dp_init(): DAP: wait CDBGPWRUPACK
 Debug: 58 42 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x20000000, value 0x20000000
 Debug: 59 42 arm_adi_v5.c:822 dap_dp_init(): DAP: wait CSYSPWRUPACK
 Debug: 60 43 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x80000000, value 0x80000000
-
 Debug: 61 43 cmsis_dap.c:845 cmsis_dap_swd_write_from_queue(): refusing to enable sticky overrun detection
 
 Debug: 62 44 arm_dap.c:120 dap_init_all(): DAP rp2040.cpu configured by default to use ADIv5 protocol
@@ -71,7 +70,11 @@ Debug: 67 48 arm_adi_v5.c:822 dap_dp_init(): DAP: wait CSYSPWRUPACK
 Debug: 68 48 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x80000000, value 0x80000000
 Debug: 69 49 cmsis_dap.c:845 cmsis_dap_swd_write_from_queue(): refusing to enable sticky overrun detection
 
+>>>> Here we start with an examination of the two cores.  Notice that both are in debug enabled
+>>>> mode already (address: 0xe000edf0, value: 0x00030003).
+
 Debug: 70 51 openocd.c:150 handle_init_command(): Examining targets...
+
 Debug: 71 51 target.c:675 target_examine_one(): [rp2040.core0] Examination started
 Debug: 72 51 target.c:1775 target_call_event_callbacks(): target event 19 (examine-start) for core rp2040.core0
 Debug: 73 51 arm_adi_v5.c:1192 dap_get_ap(): refcount AP#0x0 get 1
@@ -81,6 +84,9 @@ Debug: 76 56 target.c:2563 target_read_u32(): address: 0xe000ed00, value: 0x410c
 Info : 77 56 cortex_m.c:2547 cortex_m_examine(): [rp2040.core0] Cortex-M0+ r0p1 processor detected
 Debug: 78 56 cortex_m.c:2562 cortex_m_examine(): [rp2040.core0] cpuid: 0x410cc601
 Debug: 79 57 target.c:2563 target_read_u32(): address: 0xe000edf0, value: 0x00030003
+
+>>>> Not sure what the point of this is??  What are these bits in the DEMCR?
+
 Debug: 80 57 target.c:2651 target_write_u32(): address: 0xe000edfc, value: 0x01000000
 Debug: 81 59 target.c:2563 target_read_u32(): address: 0xe0002000, value: 0x00000041
 Debug: 82 59 target.c:2651 target_write_u32(): address: 0xe0002008, value: 0x00000000
@@ -98,6 +104,7 @@ Debug: 93 67 cortex_m.c:2418 cortex_m_dwt_setup(): [rp2040.core0] DWT dwtcr 0x20
 Info : 94 67 cortex_m.c:2688 cortex_m_examine(): [rp2040.core0] target has 4 breakpoints, 2 watchpoints
 Debug: 95 67 target.c:1775 target_call_event_callbacks(): target event 21 (examine-end) for core rp2040.core0
 Info : 96 67 target.c:691 target_examine_one(): [rp2040.core0] Examination succeed
+
 Debug: 97 67 target.c:675 target_examine_one(): [rp2040.core1] Examination started
 Debug: 98 68 target.c:1775 target_call_event_callbacks(): target event 19 (examine-start) for core rp2040.core1
 Debug: 99 68 arm_adi_v5.c:1192 dap_get_ap(): refcount AP#0x0 get 1
@@ -154,6 +161,9 @@ Debug: 148 91 arm_adi_v5.c:933 mem_ap_init(): MEM_AP CFG: large data 0, long add
 Debug: 149 91 command.c:153 script_debug(): command - rp2040.core1 invoke-event examine-end
 Debug: 150 91 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-assert-pre
 Debug: 151 92 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-assert-pre
+
+>>>> Reset both processors, poll the DAP CTRLSEL register (0x4) for two specific bits: CDBGPWRUPACK and CSYSPWRUPACK.
+
 Debug: 152 92 command.c:153 script_debug(): command - transport select
 Debug: 153 92 command.c:153 script_debug(): command - rp2040.core0 arp_reset assert 1
 Debug: 154 92 target.c:2131 target_free_all_working_areas_restore(): freeing all working areas
@@ -166,6 +176,7 @@ Debug: 160 98 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x20000
 Debug: 161 99 arm_adi_v5.c:822 dap_dp_init(): DAP: wait CSYSPWRUPACK
 Debug: 162 99 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x80000000, value 0x80000000
 Debug: 163 100 cmsis_dap.c:845 cmsis_dap_swd_write_from_queue(): refusing to enable sticky overrun detection
+
 Debug: 164 153 command.c:153 script_debug(): command - transport select
 Debug: 165 153 command.c:153 script_debug(): command - rp2040.core1 arp_reset assert 1
 Debug: 166 153 target.c:2131 target_free_all_working_areas_restore(): freeing all working areas
@@ -178,27 +189,34 @@ Debug: 172 159 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x2000
 Debug: 173 160 arm_adi_v5.c:822 dap_dp_init(): DAP: wait CSYSPWRUPACK
 Debug: 174 160 arm_adi_v5.h:682 dap_dp_poll_register(): DAP: poll 4, mask 0x80000000, value 0x80000000
 Debug: 175 161 cmsis_dap.c:845 cmsis_dap_swd_write_from_queue(): refusing to enable sticky overrun detection
+
 Debug: 176 214 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-assert-post
 Debug: 177 214 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-assert-post
 Debug: 178 214 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-deassert-pre
 Debug: 179 214 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-deassert-pre
+
 Debug: 180 214 command.c:153 script_debug(): command - transport select
 Debug: 181 214 command.c:153 script_debug(): command - rp2040.core0 arp_reset deassert 1
 Debug: 182 214 target.c:2131 target_free_all_working_areas_restore(): freeing all working areas
 Debug: 183 214 cortex_m.c:1751 cortex_m_deassert_reset(): [rp2040.core0] target->state: reset, examined
 Debug: 184 214 core.c:640 adapter_system_reset(): SRST line released
+
 Debug: 185 214 command.c:153 script_debug(): command - transport select
 Debug: 186 214 command.c:153 script_debug(): command - rp2040.core1 arp_reset deassert 1
 Debug: 187 214 target.c:2131 target_free_all_working_areas_restore(): freeing all working areas
 Debug: 188 214 cortex_m.c:1751 cortex_m_deassert_reset(): [rp2040.core1] target->state: reset, examined
 Debug: 189 214 command.c:153 script_debug(): command - rp2040.core0 invoke-event reset-deassert-post
 Debug: 190 214 command.c:153 script_debug(): command - rp2040.core1 invoke-event reset-deassert-post
+
+>>>> Notice below that the DHCSR comes up with the S_HALT and S_DEBUGEN flags set.  
+
 Debug: 191 214 command.c:153 script_debug(): command - transport select
 Debug: 192 214 command.c:153 script_debug(): command - rp2040.core0 was_examined
 Debug: 193 214 command.c:153 script_debug(): command - rp2040.core0 arp_waitstate halted 1000
 Debug: 194 217 target.c:3224 target_wait_state(): waiting for target halted...
 Debug: 195 218 cortex_m.c:942 cortex_m_poll_one(): [rp2040.core0] Exit from reset with dcb_dhcsr 0x30003
 Debug: 196 219 cortex_m.c:612 cortex_m_endreset_event(): [rp2040.core0] DCB_DEMCR = 0x01000401
+
 Debug: 197 220 target.c:2651 target_write_u32(): address: 0xe0002000, value: 0x00000003
 Debug: 198 222 target.c:2563 target_read_u32(): address: 0xe0002000, value: 0x00000041
 Debug: 199 222 target.c:2651 target_write_u32(): address: 0xe0002008, value: 0x00000000
@@ -217,6 +235,7 @@ Debug: 211 249 cortex_m.c:352 cortex_m_fast_read_all_regs(): [rp2040.core0] read
 Debug: 212 249 cortex_m.c:879 cortex_m_debug_entry(): [rp2040.core0] entered debug state in core mode: Thread at PC 0xee, cpu in Non-Secure state, target->state: halted
 Debug: 213 249 cortex_m.c:964 cortex_m_poll_one(): [rp2040.core0] postpone target event 'halted'
 Debug: 214 249 command.c:153 script_debug(): command - rp2040.core0 curstate
+
 Debug: 215 249 command.c:153 script_debug(): command - transport select
 Debug: 216 249 command.c:153 script_debug(): command - rp2040.core1 was_examined
 Debug: 217 249 command.c:153 script_debug(): command - rp2040.core1 arp_waitstate halted 1000
@@ -240,6 +259,7 @@ Debug: 234 272 cortex_m.c:550 cortex_m_clear_halt(): [rp2040.core1] NVIC_DFSR 0x
 Debug: 235 285 cortex_m.c:352 cortex_m_fast_read_all_regs(): [rp2040.core1] read 20 32-bit registers
 Debug: 236 285 cortex_m.c:879 cortex_m_debug_entry(): [rp2040.core1] entered debug state in core mode: Thread at PC 0xee, cpu in Non-Secure state, target->state: halted
 Debug: 237 285 cortex_m.c:964 cortex_m_poll_one(): [rp2040.core1] postpone target event 'halted'
+
 Debug: 238 285 cortex_m.c:1079 cortex_m_poll_smp(): [rp2040.core0] sending postponed target event 'halted'
 Debug: 239 285 target.c:1775 target_call_event_callbacks(): target event 0 (gdb-halt) for core rp2040.core0
 Debug: 240 285 target.c:1775 target_call_event_callbacks(): target event 1 (halted) for core rp2040.core0

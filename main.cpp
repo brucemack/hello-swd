@@ -154,25 +154,13 @@ int main(int, const char**) {
         return -1;
     }
 
-    // Read a 32-bit location
+    // Read a 32-bit location, 
 
-    // Write to the AP TAR register. This is the memory address that we will 
-    // be reading/writing from/to.
-    if (const auto r = swd.writeAP(0b0100, 0x00000010); r != 0) {
-        printf("Fail10 %d\n", r);
-        return -1;
-    }
-    // Read from the AP DRW register (actual data comes later)
-    if (const auto r = swd.readAP(0xc); !r.has_value()) {
-        printf("Fail11 %d\n", r.error());
-        return -1;
-    }
-    // Fetch result of AP read
-    if (const auto r = swd.readDP(0xc); !r.has_value()) {
+    if (const auto r = swd.readWordViaAP(0xe000edf0); !r.has_value()) {
         printf("Fai12 %d\n", r.error());
         return -1;
     } else {
-        printf("Data %X\n", *r);
+        printf("DHCSR: %X\n", *r);
     }
 
     while (true) {        
