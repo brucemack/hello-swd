@@ -25,7 +25,7 @@ int main() {
         sleep_ms(250);
     }
     
-    printf("Flash Test 1 (programming)\n");
+    printf("Flash Test 2\n");
 
     // Take size of binary and pad it up to a 4K boundary
     unsigned int page_size = 4096;
@@ -37,7 +37,7 @@ int main() {
     // Make a zero buffer large enough and copy in the code
     void* buf = calloc(whole_pages * page_size, 1); 
     memcpy(buf, blinky_bin, blinky_bin_len);
-
+    
     // Call out to a special RAM function that will do the actual
     // copy to flash. This is done in RAM since XIP reading will
     // become disabled while programming is happening.

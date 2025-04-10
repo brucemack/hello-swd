@@ -1,3 +1,13 @@
+Main
+====
+
+A demonstration of connecting to a Pico via the SWD debug port.
+
+Blinky
+======
+
+A simply blinky program that flashes and outputs console data.
+
 Flash Test 1
 ============
 
@@ -19,4 +29,7 @@ to prepare this test
 The blinky binary will be loaded into the base of the flash (XIP) and then 
 a processor reset will be invoked.
 
+Here's a helpful command to create the disassembly listing:
 
+        arm-none-eabi-objdump -S flash-test-1.elf > flash-test-1.lst
+        

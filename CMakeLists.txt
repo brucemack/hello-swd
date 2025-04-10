@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 #set(CMAKE_VERBOSE_MAKEFILE True)
 set(HOME $ENV{HOME})
 pico_sdk_init()
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
 
 # ----- main ------------------------------------------------------------------
 
@@ -32,9 +33,20 @@ target_link_libraries(blinky pico_stdlib)
 
 add_executable(flash-test-1
   flash-test-1.cpp
-  flash-test-1a.cpp
+  flash-test-1a.c
 )
 
 pico_enable_stdio_usb(flash-test-1 1)
 target_link_libraries(flash-test-1 pico_stdlib)
+
+# ----- flash-test-2 ----------------------------------------------------------
+
+add_executable(flash-test-2
+  flash-test-2.cpp
+  flash-test-2a.c
+)
+
+pico_enable_stdio_usb(flash-test-2 1)
+target_link_libraries(flash-test-2 pico_stdlib)
+
 

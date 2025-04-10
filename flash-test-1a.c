@@ -1,4 +1,3 @@
-//#include "pico/platform.h"
 #include "pico/stdlib.h"
 #include "hardware/flash.h"
 
