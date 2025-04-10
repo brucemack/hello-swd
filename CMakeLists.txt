@@ -27,3 +27,14 @@ add_executable(blinky
 
 pico_enable_stdio_usb(blinky 1)
 target_link_libraries(blinky pico_stdlib)
+
+# ----- flash-test-1 ----------------------------------------------------------
+
+add_executable(flash-test-1
+  flash-test-1.cpp
+  flash-test-1a.cpp
+)
+
+pico_enable_stdio_usb(flash-test-1 1)
+target_link_libraries(flash-test-1 pico_stdlib)
+
