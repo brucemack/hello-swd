@@ -162,15 +162,14 @@ int main(int, const char**) {
         printf("Fail9 %d\n", r);
         return -1;
     }
-
+    
     // Enable debug mode
-    //if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0003); r != 0) {
-    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0001); r != 0) {
+    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0003); r != 0) {
+    //if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0001); r != 0) {
+    //if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000); r != 0) {
         printf("Fail10 %d\n", r);
     }
 
-    printf("Entered debug mode\n");
-        
     if (const auto r = swd.readWordViaAP(0xe000ed0c); !r.has_value()) {
         printf("Fai12 %d\n", r.error());
         return -1;
@@ -186,10 +185,10 @@ int main(int, const char**) {
     }
 
     // Trigger a reset by writing SYSRESETREQ to NVIC.AIRCR.
-    printf("Resetting ...\n");
-    if (const auto r = swd.writeWordViaAP(0xe000ed0c, 0x05fa0004); r != 0) {
-        printf("Fail10 %d\n", r);
-    }
+    //printf("Resetting ...\n");
+    //if (const auto r = swd.writeWordViaAP(0xe000ed0c, 0x05fa0004); r != 0) {
+    //    printf("Fail10 %d\n", r);
+    //}
     
     while (true) {        
     }
