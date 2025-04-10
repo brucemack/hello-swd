@@ -105,12 +105,14 @@ int main(int, const char**) {
         return -1;
     }
 
-    // Read status
+    // Read DP CTRLSEL
     if (const auto r = swd.readDP(0b0100); !r.has_value()) {
         printf("Fail4 %d\n", r.error());
         return -1;
     } else {
         printf("Status %X\n", *r);
+        if ((*r & 0x80000000) && (*r & 0x20000000))
+            printf("Power up is good\n");
     }
 
     // DP SELECT - Set AP bank F, DP bank 0
@@ -135,6 +137,12 @@ int main(int, const char**) {
         return -1;
     } else {
         printf("AP ID %X\n", *r);
+
+    }
+    // DP SELECT - Set AP and DP bank 0
+    if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0) {
+        printf("Fail9 %d\n", r);
+        return -1;
     }
 
     // Write to the AP Control/Status Word (CSW), auto-increment, word values
@@ -143,7 +151,8 @@ int main(int, const char**) {
     // 
     // [5:4] 01  : Auto Increment set to "Increment Single," which increments by the size of the access.
     // [2:0] 010 : Size of the access to perform, which is 32 bits in this case. 
-    if (const auto r = swd.writeAP(0b0000, 0xa2000012); r != 0) {
+    //if (const auto r = swd.writeAP(0b0000, 0xa2000012); r != 0) {
+    if (const auto r = swd.writeAP(0b0000, 0x22000012); r != 0) {
         printf("Fail8 %d\n", r);
         return -1;
     }
@@ -154,7 +163,20 @@ int main(int, const char**) {
         return -1;
     }
 
-    // Read a 32-bit location, 
+    // Enable debug mode
+    //if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0003); r != 0) {
+    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0001); r != 0) {
+        printf("Fail10 %d\n", r);
+    }
+
+    printf("Entered debug mode\n");
+        
+    if (const auto r = swd.readWordViaAP(0xe000ed0c); !r.has_value()) {
+        printf("Fai12 %d\n", r.error());
+        return -1;
+    } else {
+        printf("NVIC.AIRCR: %X\n", *r);
+    }
 
     if (const auto r = swd.readWordViaAP(0xe000edf0); !r.has_value()) {
         printf("Fai12 %d\n", r.error());
@@ -163,6 +185,12 @@ int main(int, const char**) {
         printf("DHCSR: %X\n", *r);
     }
 
+    // Trigger a reset by writing SYSRESETREQ to NVIC.AIRCR.
+    printf("Resetting ...\n");
+    if (const auto r = swd.writeWordViaAP(0xe000ed0c, 0x05fa0004); r != 0) {
+        printf("Fail10 %d\n", r);
+    }
+    
     while (true) {        
     }
 }

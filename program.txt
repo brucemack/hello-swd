@@ -80,6 +80,9 @@ Debug: 72 51 target.c:1775 target_call_event_callbacks(): target event 19 (exami
 Debug: 73 51 arm_adi_v5.c:1192 dap_get_ap(): refcount AP#0x0 get 1
 Debug: 74 54 arm_adi_v5.c:1135 dap_find_get_ap(): Found MEM-AP AHB3 at AP index: 0 (IDR=0x04770031)
 Debug: 75 55 arm_adi_v5.c:933 mem_ap_init(): MEM_AP CFG: large data 0, long address 0, big-endian 0
+
+>>>> Reading the CPUID:
+
 Debug: 76 56 target.c:2563 target_read_u32(): address: 0xe000ed00, value: 0x410cc601
 Info : 77 56 cortex_m.c:2547 cortex_m_examine(): [rp2040.core0] Cortex-M0+ r0p1 processor detected
 Debug: 78 56 cortex_m.c:2562 cortex_m_examine(): [rp2040.core0] cpuid: 0x410cc601

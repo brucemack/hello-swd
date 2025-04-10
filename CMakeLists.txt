@@ -17,3 +17,13 @@ add_executable(main
 
 pico_enable_stdio_usb(main 1)
 target_link_libraries(main pico_stdlib hardware_i2c)
+
+# ----- blinky ----------------------------------------------------------------
+# Useful for keeping a processor visibly busy when testing debuggers.
+
+add_executable(blinky
+  blinky.cpp
+)
+
+pico_enable_stdio_usb(blinky 1)
+target_link_libraries(blinky pico_stdlib)
