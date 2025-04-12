@@ -189,12 +189,11 @@ int main(int, const char**) {
 
     // Write a value into the LR register
     // [16] is 1 (write), [6:0] 0b0001111 means LR
-    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0001000F); r != 0) {
+    // NOTICE: The DCRDR register has to be written first!
+    if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x6); r != 0)
         return -1;
-    }
-    if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x6); r != 0) {
+    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0001000F); r != 0) 
         return -1;
-    }
     // Kill time to make it happen
     sleep_ms(10);
     // Read back from the LR register
