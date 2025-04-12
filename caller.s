@@ -13,14 +13,14 @@
     .thumb_func
     .global start_point
 start_point:  
-    ldr r4, debug_trampoline_addr
+    ldr r5, debug_trampoline_addr
     ldr r7, target_func_addr
     ldr r0, param0
     ldr r1, param1
     ldr r2, param2
     ldr r3, param3
 # Call the trampoline
-    blx r4
+    blx r5
     .align 4
 
 # Here is where the values need to be plugged in:

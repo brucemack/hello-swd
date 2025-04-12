@@ -43,11 +43,14 @@ int main() {
     // become disabled while programming is happening.
     move_to_flash((const uint8_t*)buf, whole_pages * page_size);
 
+    unsigned int i = 0;
+
     while (1) {
       gpio_put(LED_PIN, 0);
       sleep_ms(500);
       gpio_put(LED_PIN, 1);
       sleep_ms(500);
+      printf("Hello %u\n", i++);
     }
 
 }
