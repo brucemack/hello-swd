@@ -60,30 +60,52 @@ public:
      * @param data The data to write
      * @returns 0 on success.
      * 
-     * IMPORTANT: This funciton assumes that the appropriate AP
+     * IMPORTANT: This function assumes that the appropriate AP
      * and AP register bank 0 have already been selected via a 
      * previous DP SELECT call.  This function does not do those
      * steps in order to save time.
+     * 
+     * IMPORTANT: This function assumes that the CSW has been 
+     * configured for a 4-byte transfer.
      */
     int writeWordViaAP(uint32_t addr, uint32_t data) {
         // Write to the AP TAR register. This is the memory address that we will 
         // be reading/writing from/to.
-        if (const auto r = writeAP(0x4, addr); r != 0) {
+        if (const auto r = writeAP(0x4, addr); r != 0)
             return r;
-        }
         // Write to the AP DRW register
-        if (const auto r = writeAP(0xc, data); r != 0) {
+        if (const auto r = writeAP(0xc, data); r != 0)
             return r;
-        } else {
-            return 0;
+        return 0;
+    }
+
+   /** 
+     * IMPORTANT: This function assumes that the CSW has been 
+     * configured for a 4-byte transfer and for auto-increment.
+     */
+   int writeMultiWordViaAP(uint32_t start_addr, const uint32_t* data, 
+        unsigned int data_count) {
+        // Write to the AP TAR register. This is the starting memory 
+        // address that we will be reading/writing from/to. Since
+        // auto-increment is enabled this only needs ot happen once.
+        if (const auto r = writeAP(0x4, start_addr); r != 0)
+            return r;
+        for (unsigned int i = 0; i < data_count; i++) {
+            // Write to the AP DRW register
+            if (const auto r = writeAP(0xc, *(data + i)); r != 0)
+                return r;
         }
+        return 0;
     }
 
     /**
-     * IMPORTANT: This funciton assumes that the appropriate AP
+     * IMPORTANT: This function assumes that the appropriate AP
      * and AP register bank 0 have already been selected via a 
      * previous DP SELECT call.  This function does not do those
      * steps in order to save time.
+     * 
+     * IMPORTANT: This function assumes that the CSW has been 
+     * configured for a 4-byte transfer.
      */
     std::expected<uint32_t, int> readWordViaAP(uint32_t addr) {
 
