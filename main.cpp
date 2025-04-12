@@ -12,6 +12,9 @@ const uint LED_PIN = 25;
 #define CLK_PIN (2)
 #define DIO_PIN (3)
 
+#define ARM_DCRSR (0xE000EDF4)
+#define ARM_DCRDR (0xE000EDF8) 
+
 int main(int, const char**) {
 
     stdio_init_all();
@@ -182,6 +185,28 @@ int main(int, const char**) {
         return -1;
     } else {
         printf("DHCSR: %X\n", *r);
+    }
+
+    // Write a value into the LR register
+    // [16] is 1 (write), [6:0] 0b0001111 means LR
+    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0001000F); r != 0) {
+        return -1;
+    }
+    if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x6); r != 0) {
+        return -1;
+    }
+    // Kill time to make it happen
+    sleep_ms(10);
+    // Read back from the LR register
+    // [16] is 0 (read), [6:0] 0b0001111 means LR
+    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0000000F); r != 0) {
+        return -1;
+    }
+    if (const auto r = swd.readWordViaAP(ARM_DCRDR); !r.has_value()) {
+        printf("Fai12 %d\n", r.error());
+        return -1;
+    } else {
+        printf("LR: %X\n", *r);
     }
 
     // Trigger a reset by writing SYSRESETREQ to NVIC.AIRCR.
