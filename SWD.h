@@ -4,6 +4,11 @@
 #include <cstdint>
 #include <expected>
 
+#define ARM_DCRSR (0xE000EDF4)
+#define ARM_DCRDR (0xE000EDF8) 
+#define ARM_DHCSR (0xe000edf0)
+#define ARM_DHCSR_S_REGRDY (0x00010000)
+
 namespace kc1fsz {
 
 class SWD {
@@ -50,6 +55,8 @@ public:
     std::expected<uint32_t, int> readAP(uint8_t addr) {
         return _read(true, addr);
     }
+
+    // ------ Convenience Functions -------------------------------------------
 
     /**
      * Writes a 32-bit word into the processor memory space via the MEM-AP
@@ -123,6 +130,20 @@ public:
             return std::unexpected(r.error());
         } else {
             return *r;
+        }
+    }
+
+    /**
+     * Polls the S_REGRDY bit of the DHCSR register to find out whether
+     * a core register read/write has completed successfully.
+     */
+    int pollREGRDY(unsigned int timeoutUs = 0) {
+        while (true) {
+            const auto r = readWordViaAP(ARM_DHCSR);
+            if (!r.has_value())
+                return -1;
+            if (*r & ARM_DHCSR_S_REGRDY)
+                return 0;
         }
     }
 

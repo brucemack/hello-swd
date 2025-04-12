@@ -12,8 +12,6 @@ const uint LED_PIN = 25;
 #define CLK_PIN (2)
 #define DIO_PIN (3)
 
-#define ARM_DCRSR (0xE000EDF4)
-#define ARM_DCRDR (0xE000EDF8) 
 
 int main(int, const char**) {
 
@@ -194,13 +192,17 @@ int main(int, const char**) {
         return -1;
     if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0001000F); r != 0) 
         return -1;
-    // Kill time to make it happen
-    sleep_ms(10);
+    // Poll to find out if the write is done
+    if (swd.pollREGRDY() != 0)
+        return -1;
+
     // Read back from the LR register
     // [16] is 0 (read), [6:0] 0b0001111 means LR
-    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0000000F); r != 0) {
+    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0000000f); r != 0)
         return -1;
-    }
+    // Poll to find out if the read is done
+    if (swd.pollREGRDY() != 0)
+        return -1;
     if (const auto r = swd.readWordViaAP(ARM_DCRDR); !r.has_value()) {
         printf("Fai12 %d\n", r.error());
         return -1;
