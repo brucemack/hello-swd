@@ -18,7 +18,7 @@ void __no_inline_not_in_flash_func(move_to_flash)(const uint8_t* code, unsigned 
 
     // Find the location of the key ROM functions
     void (*rom_debug_trampoline)() = rom_func_lookup(rom_table_code('D', 'T'));
-    //printf("DT %X\n", rom_debug_trampoline);
+    printf("DT %X\n", rom_debug_trampoline);
     void (*rom_connect_internal_flash)() = rom_func_lookup(rom_table_code('I', 'F'));
     //printf("IF %X\n", rom_connect_internal_flash);
     void (*rom_flash_exit_xip)() = rom_func_lookup(rom_table_code('E', 'X'));
@@ -30,6 +30,7 @@ void __no_inline_not_in_flash_func(move_to_flash)(const uint8_t* code, unsigned 
     void (*rom_flash_flush_cache)() = rom_func_lookup(rom_table_code('F', 'C'));
     //printf("FC %X\n", rom_flash_flush_cache);
 
+    /*
     // Seutp for serial-mode operations
     rom_connect_internal_flash();
     rom_flash_exit_xip();
@@ -40,4 +41,5 @@ void __no_inline_not_in_flash_func(move_to_flash)(const uint8_t* code, unsigned 
 
     // Force reset
     AIRCR_Register = 0x5FA0004;
+    */
 }

@@ -82,7 +82,7 @@ int main(int, const char**) {
     if (const auto r = swd.readDP(0b0000); r.has_value())
       printf("IDCODE Value %X\n", *r);
     else {
-        printf("ERROR %d\n", r.error());
+        printf("IDCODE ERROR %d\n", r.error());
         return -1;
     }
 
@@ -164,10 +164,9 @@ int main(int, const char**) {
         return -1;
     }
     
-    // Enable debug mode
+    // Enable debug mode and halt
     if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0003); r != 0) {
     //if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0001); r != 0) {
-    //if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000); r != 0) {
         printf("Fail10 %d\n", r);
     }
 
@@ -185,20 +184,21 @@ int main(int, const char**) {
         printf("DHCSR: %X\n", *r);
     }
 
+    /*
     // Write a value into the LR register
-    // [16] is 1 (write), [6:0] 0b0001111 means LR
+    // [16] is 1 (write), [6:0] 0b0001110 means LR
     // NOTICE: The DCRDR register has to be written first!
     if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x6); r != 0)
         return -1;
-    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0001000F); r != 0) 
+    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0001000e); r != 0) 
         return -1;
     // Poll to find out if the write is done
     if (swd.pollREGRDY() != 0)
         return -1;
 
     // Read back from the LR register
-    // [16] is 0 (read), [6:0] 0b0001111 means LR
-    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0000000f); r != 0)
+    // [16] is 0 (read), [6:0] 0b0001110 means LR
+    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0000000e); r != 0)
         return -1;
     // Poll to find out if the read is done
     if (swd.pollREGRDY() != 0)
@@ -209,12 +209,51 @@ int main(int, const char**) {
     } else {
         printf("LR: %X\n", *r);
     }
+    */
+
+    // Call a test function via the debug trampoline
+
+    /*
+    // Write a value into the r7 register
+    // [16] is 1 (write), [6:0] 0b0000111 means r7
+    if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x10000321); r != 0)
+        return -1;
+    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x00010007); r != 0) 
+        return -1;
+    // Poll to find out if the write is done
+    if (swd.pollREGRDY() != 0)
+        return -1;
+
+    // Write a value into the debug return address value
+    // [16] is 1 (write), [6:0] 0b0001111 
+    if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x00000185); r != 0)
+        return -1;
+    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0001000f); r != 0) 
+        return -1;
+    // Poll to find out if the write is done
+    if (swd.pollREGRDY() != 0)
+        return -1;
+    */
+
+    printf("Sleeping\n");
+    sleep_ms(5000);
+
+    // Leave debug mode
+    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000); r != 0) {
+        printf("Fail10 %d\n", r);
+        return -1;
+    }
+
+    // Finalize any last writes
+    swd.writeBitPattern("00000000");
 
     // Trigger a reset by writing SYSRESETREQ to NVIC.AIRCR.
     //printf("Resetting ...\n");
     //if (const auto r = swd.writeWordViaAP(0xe000ed0c, 0x05fa0004); r != 0) {
     //    printf("Fail10 %d\n", r);
     //}
+
+    printf("Blocking\n");
     
     while (true) {        
     }
