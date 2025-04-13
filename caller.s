@@ -1,11 +1,10 @@
-# ARM Thumb instructions needed to call a ROM function 
+# ARM Thumb instructions needed to call a function 
 # on an RP2040.
 #
 # arm-none-eabi-as --warn --fatal-warnings -mcpu=cortex-m0plus -g ../caller.s -o caller.obj
 # arm-none-eabi-objdump -S caller.obj 
 # arm-none-eabi-objcopy -O binary caller.obj caller.bin
-# xxd -g4 -i caller.bin >> caller-bin.h
-
+# xxd -g4 -i caller.bin > ../caller-bin.h
     .cpu cortex-m0plus
     .thumb
     .section .text
@@ -13,32 +12,15 @@
     .thumb_func
     .global start_point
 start_point:  
-    ldr r5, debug_trampoline_addr
-    ldr r7, target_func_addr
-    ldr r0, param0
-    ldr r1, param1
-    ldr r2, param2
-    ldr r3, param3
-# Call the trampoline
-    blx r5
-    .align 4
+# Make sure that the LSB is set (i.e. thumb mode)
+    mov r6, #1
+    orr r7, r7, r6
+    blx r7
+# Halt on return     
+    bkpt #0
+    b start_point
 
-# Here is where the values need to be plugged in:
-
-# The address of the trampoline ROM function (looked up using "DT").
-debug_trampoline_addr:
-    .word 0x00000000
-
-# The address of the function being called. 
-target_func_addr:
-    .word 0x00000000
-
-# Parameters 0, 1, 2, 3 being passed to the target function.
-param0:
-    .word 0x00000000
-param1:
-    .word 0x00000000
-param2:
-    .word 0x00000000
-param3:
-    .word 0x00000000
+# EXTRA
+    mov r0, #8
+    bx lr 
+     
