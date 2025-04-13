@@ -20,7 +20,3 @@ start_point:
     bkpt #0
     b start_point
 
-# EXTRA
-    mov r0, #8
-    bx lr 
-     

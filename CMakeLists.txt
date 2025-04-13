@@ -19,6 +19,14 @@ add_executable(main
 pico_enable_stdio_usb(main 1)
 target_link_libraries(main pico_stdlib hardware_i2c)
 
+add_executable(prog-1
+  prog-1.cpp
+  SWD.cpp
+)
+
+pico_enable_stdio_usb(prog-1 1)
+target_link_libraries(prog-1 pico_stdlib hardware_i2c)
+
 # ----- blinky ----------------------------------------------------------------
 # Useful for keeping a processor visibly busy when testing debuggers.
 

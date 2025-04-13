@@ -15,84 +15,71 @@ const uint LED_PIN = 25;
 #define CLK_PIN (2)
 #define DIO_PIN (3)
 
-int program_demo_1(SWD& swd) {
-
-    printf("Program Demo 1\n");
-
-    // Enable debug mode and halt
-    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0003); r != 0) {
-        printf("Fail10 %d\n", r);
-    }
-    // Load a small program into memory
-    //
-    // mov r7, #8
-    // 0:	2708      	movs	r7, #8
-    //  bkpt #0    
-    // 2:	be00      	bkpt	0x0000
-    if (const auto r = swd.writeWordViaAP(0x20000000, 0xbe002708); r != 0)
-        return -1;
-
-    // Clear the value in the r7 register
-    // [16] is 1 (write), [6:0] 0b0000111 means r7
-    if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x00000000); r != 0)
-        return -1;
-    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x00010007); r != 0) 
-        return -1;
-    // Poll to find out if the write is done
-    if (swd.pollREGRDY() != 0)
-        return -1;
-
-    // Write a value into the debug return address value
-    // [16] is 1 (write), [6:0] 0b0001111 
-    if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x20000001); r != 0)
-        return -1;
-    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0001000f); r != 0) 
-        return -1;
-    // Poll to find out if the write is done
-    if (swd.pollREGRDY() != 0)
-        return -1;
-
-    // Leave halt mode
-    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000); r != 0) {
-        printf("Fail10 %d\n", r);
-        return -1;
-    }
-
-    // We should immediately hit a breakpoint here
-
-    // Re-enter debug mode
-    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0003); r != 0) {
-        printf("Fail10 %d\n", r);
-        return -1;
-    }
-
-    // Read back from the LR register
-    // [16] is 0 (read), [6:0] 0b0000111 means r7
-    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x00000007); r != 0)
-        return -1;
-    // Poll to find out if the read is done
-    if (swd.pollREGRDY() != 0)
-        return -1;
-
-    if (const auto r = swd.readWordViaAP(ARM_DCRDR); !r.has_value()) {
-        printf("Fai12 %d\n", r.error());
-        return -1;
-    } else {
-        printf("r7: %X\n", *r);
-    }
-
-    return 0;
+static uint32_t rom_table_code(char c1, char c2) {
+  return (c2 << 8) | c1;
 }
 
-int program_demo_2(SWD& swd) {
+int flash(SWD& swd) {
 
-    printf("Program Demo 2\n");
+    printf("IN flash\n");
 
     // Enable debug mode and halt
     if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0003); r != 0) {
         printf("Fail10 %d\n", r);
     }
 
+    // ----- Get the ROM function locations -----------------------------------
+
+    // Get the start of the ROM function table
+    unsigned int tab_ptr;
+    if (const auto r = swd.readWordViaAP(0x00000014); !r.has_value()) {
+        return -1;
+    } else {
+        tab_ptr = *r & 0xffff;
+    }
+
+    unsigned int rom_connect_internal_flash_func = 0;
+    unsigned int rom_flash_exit_xip_func = 0;
+    unsigned int rom_flash_range_erase_func = 0;
+    unsigned int rom_flash_range_program_func = 0;
+    unsigned int rom_flash_flush_cache_func = 0;
+
+    // Iterate through the table until we find a null function code
+    // Each entry is a 16-bit address and two 8-bit codes.
+
+    while (true) {
+
+        unsigned int func_code_and_addr;
+        if (const auto r = swd.readWordViaAP(tab_ptr); !r.has_value()) {
+            return -2;
+        } else {
+            func_code_and_addr = *r;
+        }
+        unsigned int func_addr = func_code_and_addr & 0xffff;
+        unsigned int func_code = (func_code_and_addr >> 16) & 0xffff;
+
+        if (func_code == 0)
+            break;
+
+        printf("Code %c%c %X\n", func_code & 0xff, (func_code >> 8) & 0xff, func_addr);
+
+        if (func_code == rom_table_code('I', 'F'))
+            rom_connect_internal_flash_func = func_addr;
+        else if (func_code == rom_table_code('E', 'X'))
+            rom_flash_exit_xip_func = func_addr;
+        else if (func_code == rom_table_code('R', 'E'))
+            rom_flash_range_erase_func = func_addr;
+        else if (func_code == rom_table_code('R', 'P'))
+            rom_flash_range_program_func = func_addr;
+        else if (func_code == rom_table_code('F', 'C'))
+            rom_flash_flush_cache_func = func_addr;
+        
+        tab_ptr += 4;
+    }
+
+
+
+    /*
     // Load the trampoline program into memory.  We're doing this because 
     // the official _debug_trampoline() doesn't seem to work.
     if (const auto r = swd.writeWordViaAP(0x20000000, 0x43372601); r != 0)
@@ -175,6 +162,7 @@ int program_demo_2(SWD& swd) {
     } else {
         printf("r0: %X\n", *r);
     }
+    */
 
     return 0;
 }
@@ -199,7 +187,7 @@ int main(int, const char**) {
     gpio_put(LED_PIN, 0);
     sleep_ms(500);
 
-    printf("Start\n");
+    printf("Start 2\n");
 
     SWD swd;
 
@@ -283,7 +271,7 @@ int main(int, const char**) {
         printf("At %08X = %08X\n", a, *r);
     }
 
-    program_demo_2(swd);
+    flash(swd);
 
     if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000); r != 0) {
         printf("Fail10 %d\n", r);

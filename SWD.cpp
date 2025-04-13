@@ -26,6 +26,87 @@ void SWD::init() {
     gpio_set_pulls(DIO_PIN, false, false);        
 }
 
+int SWD::connect() {   
+
+    // Long period with DIO=1, CLK=0
+    setDIO(true);
+    sleep_us(1655);
+    writeBitPattern("11111111");
+
+    sleep_us(1);
+
+    // JTAG-TO-DS Conversion
+    writeJTAGToDSConversion();
+
+    sleep_us(1);
+
+    // Delay with CLK=0/DIO=0
+    setDIO(false);
+    sleep_us(160);
+    // 8 clocks with DIO=1
+    writeBitPattern("11111111");
+    sleep_us(1);
+    // Selection alert (128 bits)
+    writeSelectionAlert();   
+    // ARM Coresight activation code
+    writeActivaionCode();
+    // Line reset
+    writeLineReset();
+
+    writeBitPattern("00000000");
+    // Delay with CLK=0/DIO=0
+    setDIO(false);
+    sleep_us(150);
+
+    // DP TARGETSEL, DP for Core 0.  We ignore the ACK here
+    if (const auto r = writeDP(0b1100, 0x01002927, true); r != 0) {
+        printf("DP TARGETSEL write failed %d\n", r);
+        return -1;
+    }
+
+    // Delay with CLK=0/DIO=0
+    setDIO(false);
+    sleep_us(732);
+
+    // Read the ID code
+    if (const auto r = readDP(0b0000); r.has_value()) {}
+    else {
+        printf("IDCODE ERROR %d\n", r.error());
+        return -1;
+    }
+
+    // FOLLOWING PICOREG
+
+    // Abort
+    if (const auto r = writeDP(0b0000, 0x0000001e); r != 0) {
+        printf("Fail1 %d\n", r);
+        return -1;
+    }
+
+    // Set AP and DP bank 0
+    if (const auto r = writeDP(0b1000, 0x00000000); r != 0) {
+        printf("Fail2 %d\n", r);
+        return -1;
+    }
+
+    // Power up
+    if (const auto r = writeDP(0b0100, 0x50000001); r != 0) {
+        printf("Fail3 %d\n", r);
+        return -1;
+    }
+
+    // Read DP CTRLSEL
+    if (const auto r = readDP(0b0100); !r.has_value()) {
+        printf("Fail4 %d\n", r.error());
+        return -1;
+    } else {
+        if ((*r & 0x80000000) && (*r & 0x20000000))
+            return 0;
+        else
+            return -2;
+    }
+}
+
 void SWD::_setCLK(bool h) {
     gpio_put(CLK_PIN, h ? 1 : 0);
 }

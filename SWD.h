@@ -17,6 +17,13 @@ public:
 
     void init();
 
+    /**
+     * Goes through the initial line rest and initialization process.
+     * @returns 0 on a good handshake, -1 on an error
+     */
+    int connect();
+
+
     // NOTE: Slave captures outbound data on the rising edge of the clock
     void writeBit(bool b);
     // NOTE: Master captures inbound data on the falling edge of the clock
