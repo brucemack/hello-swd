@@ -141,6 +141,34 @@ public:
     }
 
     /**
+     * IMPORTANT: This function assumes that the appropriate AP
+     * and AP register bank 0 have already been selected via a 
+     * previous DP SELECT call.  This function does not do those
+     * steps in order to save time.
+     * 
+     * IMPORTANT: This function assumes that the CSW has been 
+     * configured for a 2-byte transfer.
+     */
+    std::expected<uint16_t, int> readHalfWordViaAP(uint32_t addr) {
+
+        // Write to the AP TAR register. This is the memory address that we will 
+        // be reading/writing from/to.
+        if (const auto r = writeAP(0x4, addr); r != 0) {
+            return std::unexpected(r);
+        }
+        // Read from the AP DRW register (actual data is buffered and comes later)
+        if (const auto r = readAP(0xc); !r.has_value()) {
+            return std::unexpected(r.error());
+        }
+        // Fetch result of previous AP read
+        if (const auto r = readDP(0xc); !r.has_value()) {
+            return std::unexpected(r.error());
+        } else {
+            return (*r & 0xffff);
+        }
+    }
+
+    /**
      * Polls the S_REGRDY bit of the DHCSR register to find out whether
      * a core register read/write has completed successfully.
      */

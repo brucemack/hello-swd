@@ -21,48 +21,65 @@ static uint32_t rom_table_code(char c1, char c2) {
 
 int flash(SWD& swd) {
 
-    printf("IN flash\n");
-
     // Enable debug mode and halt
-    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0003); r != 0) {
-        printf("Fail10 %d\n", r);
-    }
+    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0003); r != 0)
+        return -1;
 
     // ----- Get the ROM function locations -----------------------------------
 
+    // Observation from an RP2040: table pointer is a 0x7a. This is interesting
+    // because it is not a multiple of 4, so we need to be careful when searching
+    // the lookup table - use half-word accesses.
+
+    // Write to the AP Control/Status Word (CSW), half-word values
+    //
+    // 1010_0010_0000_0000_0000_0001
+    // 
+    // [5:4] 00  : No increment
+    // [2:0] 001 : half-word access 
+    if (const auto r = swd.writeAP(0b0000, 0x22000001); r != 0)
+        return -2;
+
     // Get the start of the ROM function table
-    unsigned int tab_ptr;
-    if (const auto r = swd.readWordViaAP(0x00000014); !r.has_value()) {
-        return -1;
+    uint16_t tab_ptr;
+    if (const auto r = swd.readHalfWordViaAP(0x00000014); !r.has_value()) {
+        return -3;
     } else {
-        tab_ptr = *r & 0xffff;
+        tab_ptr = *r;
     }
 
-    unsigned int rom_connect_internal_flash_func = 0;
-    unsigned int rom_flash_exit_xip_func = 0;
-    unsigned int rom_flash_range_erase_func = 0;
-    unsigned int rom_flash_range_program_func = 0;
-    unsigned int rom_flash_flush_cache_func = 0;
+    uint16_t rom_connect_internal_flash_func = 0;
+    uint16_t rom_flash_exit_xip_func = 0;
+    uint16_t rom_flash_range_erase_func = 0;
+    uint16_t rom_flash_range_program_func = 0;
+    uint16_t rom_flash_flush_cache_func = 0;
 
     // Iterate through the table until we find a null function code
-    // Each entry is a 16-bit address and two 8-bit codes.
+    // Each entry word is two 8-bit codes and a 16-bit 
+    // address.  
 
     while (true) {
 
-        unsigned int func_code_and_addr;
-        if (const auto r = swd.readWordViaAP(tab_ptr); !r.has_value()) {
-            return -2;
+        uint16_t func_code;
+        if (const auto r = swd.readHalfWordViaAP(tab_ptr); !r.has_value()) {
+            return -4;
         } else {
-            func_code_and_addr = *r;
+            func_code = *r;
         }
-        unsigned int func_addr = func_code_and_addr & 0xffff;
-        unsigned int func_code = (func_code_and_addr >> 16) & 0xffff;
+
+        uint16_t func_addr;
+        if (const auto r = swd.readHalfWordViaAP(tab_ptr + 2); !r.has_value()) {
+            return -5;
+        } else {
+            func_addr = *r;
+        }
 
         if (func_code == 0)
             break;
 
         printf("Code %c%c %X\n", func_code & 0xff, (func_code >> 8) & 0xff, func_addr);
 
+        // SANITY CHECK: IF is supposed to be at 0x24a1.
         if (func_code == rom_table_code('I', 'F'))
             rom_connect_internal_flash_func = func_addr;
         else if (func_code == rom_table_code('E', 'X'))
@@ -76,8 +93,12 @@ int flash(SWD& swd) {
         
         tab_ptr += 4;
     }
-
-
+    // Put the CSW back to word-access w/ increment
+    //
+    // 1010_0010_0000_0000_0001_0010
+    // 
+    if (const auto r = swd.writeAP(0b0000, 0x22000012); r != 0)
+        return -6;
 
     /*
     // Load the trampoline program into memory.  We're doing this because 
@@ -219,6 +240,7 @@ int main(int, const char**) {
         printf("AP ID %X\n", *r);
 
     }
+
     // DP SELECT - Set AP and DP bank 0
     if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0) {
         printf("Fail9 %d\n", r);
@@ -237,6 +259,7 @@ int main(int, const char**) {
         return -1;
     }
 
+    // #### TODO : NOT NEEDED?
     // DP SELECT - Set AP and DP bank 0
     if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0) {
         printf("Fail9 %d\n", r);
