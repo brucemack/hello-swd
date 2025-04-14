@@ -21,6 +21,10 @@ static uint32_t rom_table_code(char c1, char c2) {
 
 int flash(SWD& swd) {
 
+    // DP SELECT - Set AP and DP bank 0
+    if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0)
+        return -1;
+
     // Enable debug mode and halt
     if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0003); r != 0)
         return -1;
@@ -30,15 +34,6 @@ int flash(SWD& swd) {
     // Observation from an RP2040: table pointer is a 0x7a. This is interesting
     // because it is not a multiple of 4, so we need to be careful when searching
     // the lookup table - use half-word accesses.
-
-    // Write to the AP Control/Status Word (CSW), half-word values
-    //
-    // 1010_0010_0000_0000_0000_0001
-    // 
-    // [5:4] 00  : No increment
-    // [2:0] 001 : half-word access 
-    if (const auto r = swd.writeAP(0b0000, 0x22000001); r != 0)
-        return -2;
 
     // Get the start of the ROM function table
     uint16_t tab_ptr;
@@ -53,6 +48,7 @@ int flash(SWD& swd) {
     uint16_t rom_flash_range_erase_func = 0;
     uint16_t rom_flash_range_program_func = 0;
     uint16_t rom_flash_flush_cache_func = 0;
+    uint16_t rom_debug_trampoline_func = 0;
 
     // Iterate through the table until we find a null function code
     // Each entry word is two 8-bit codes and a 16-bit 
@@ -77,9 +73,8 @@ int flash(SWD& swd) {
         if (func_code == 0)
             break;
 
-        printf("Code %c%c %X\n", func_code & 0xff, (func_code >> 8) & 0xff, func_addr);
+        //printf("%04X Code %04X %c%c %X\n", tab_ptr, func_code, (func_code & 0xff), (func_code >> 8) & 0xff, func_addr);
 
-        // SANITY CHECK: IF is supposed to be at 0x24a1.
         if (func_code == rom_table_code('I', 'F'))
             rom_connect_internal_flash_func = func_addr;
         else if (func_code == rom_table_code('E', 'X'))
@@ -90,17 +85,13 @@ int flash(SWD& swd) {
             rom_flash_range_program_func = func_addr;
         else if (func_code == rom_table_code('F', 'C'))
             rom_flash_flush_cache_func = func_addr;
+        else if (func_code == rom_table_code('D', 'T'))
+            rom_debug_trampoline_func = func_addr;
         
         tab_ptr += 4;
     }
-    // Put the CSW back to word-access w/ increment
-    //
-    // 1010_0010_0000_0000_0001_0010
-    // 
-    if (const auto r = swd.writeAP(0b0000, 0x22000012); r != 0)
-        return -6;
 
-    /*
+    /* NOT NEED ANYMORE!
     // Load the trampoline program into memory.  We're doing this because 
     // the official _debug_trampoline() doesn't seem to work.
     if (const auto r = swd.writeWordViaAP(0x20000000, 0x43372601); r != 0)
@@ -109,6 +100,7 @@ int flash(SWD& swd) {
         return -1;
     if (const auto r = swd.writeWordViaAP(0x20000008, 0x46c0e7fa); r != 0)
         return -1;
+    */
 
     // Load a small test program that sets r0 and returns.  Note the starting
     // location
@@ -116,9 +108,9 @@ int flash(SWD& swd) {
         return -1;
 
     // Write the target function address in the r7 register (+1 for thumb)
-    // [16] is 1 (write), [6:0] 0b0000111 means r7
     if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x20000011); r != 0)
         return -1;
+    // [16] is 1 (write), [6:0] 0b0000111 means r7
     if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x00010007); r != 0) 
         return -1;
     // Poll to find out if the write is done
@@ -126,9 +118,9 @@ int flash(SWD& swd) {
         return -1;
 
     // Clear r0
-    // [16] is 1 (write), [6:0] 0b0000111 means r7
     if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x00000000); r != 0)
         return -1;
+    // [16] is 1 (write), [6:0] 0b0000000 means r0
     if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x00010000); r != 0) 
         return -1;
     // Poll to find out if the write is done
@@ -136,9 +128,9 @@ int flash(SWD& swd) {
         return -1;
 
     // Write a value in the MSP register
-    // [16] is 1 (write), [6:0] 0b0001101 means MSP
     if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x20000400); r != 0)
         return -1;
+    // [16] is 1 (write), [6:0] 0b0001101 means MSP
     if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0001000d); r != 0) 
         return -1;
     // Poll to find out if the write is done
@@ -147,9 +139,9 @@ int flash(SWD& swd) {
 
     // Write a value into the debug return address value. Note a+1 for 
     // thumb mode.
-    // [16] is 1 (write), [6:0] 0b0001111 
-    if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x20000001); r != 0)
+    if (const auto r = swd.writeWordViaAP(ARM_DCRDR, rom_debug_trampoline_func); r != 0)
         return -1;
+    // [16] is 1 (write), [6:0] 0b0001111 
     if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0001000f); r != 0) 
         return -1;
     // Poll to find out if the write is done
@@ -183,7 +175,6 @@ int flash(SWD& swd) {
     } else {
         printf("r0: %X\n", *r);
     }
-    */
 
     return 0;
 }
@@ -259,13 +250,6 @@ int main(int, const char**) {
         return -1;
     }
 
-    // #### TODO : NOT NEEDED?
-    // DP SELECT - Set AP and DP bank 0
-    if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0) {
-        printf("Fail9 %d\n", r);
-        return -1;
-    }
-    
     // Enable debug mode and halt
     if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0003); r != 0) {
         printf("Fail10 %d\n", r);
@@ -286,7 +270,14 @@ int main(int, const char**) {
     }
 
     // Read from the DT function location in ROM (not right for some reason)
-    unsigned int a = 0x00000185;     
+    unsigned int a = 0x000001ae;     
+    if (const auto r = swd.readWordViaAP(a); !r.has_value()) {
+        printf("Fai12 %d\n", r.error());
+        return -1;
+    } else {
+        printf("At %08X = %08X\n", a, *r);
+    }
+    a = 0x000001ae - 4;     
     if (const auto r = swd.readWordViaAP(a); !r.has_value()) {
         printf("Fai12 %d\n", r.error());
         return -1;

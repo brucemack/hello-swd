@@ -153,7 +153,8 @@ public:
 
         // Write to the AP TAR register. This is the memory address that we will 
         // be reading/writing from/to.
-        if (const auto r = writeAP(0x4, addr); r != 0) {
+        // Notice that the read is word-aligned
+        if (const auto r = writeAP(0x4, addr & 0xfffffffc); r != 0) {
             return std::unexpected(r);
         }
         // Read from the AP DRW register (actual data is buffered and comes later)
@@ -164,7 +165,13 @@ public:
         if (const auto r = readDP(0xc); !r.has_value()) {
             return std::unexpected(r.error());
         } else {
-            return (*r & 0xffff);
+            // For the even half-words (i.e. word boundary) just return the 
+            // 16 least-significant bytes
+            if ((addr & 0x3) == 0)
+                return (*r & 0xffff);
+            // For the odd half-words return the 16 most significant bytes.
+            else 
+                return (*r >> 16) & 0xffff;
         }
     }
 
