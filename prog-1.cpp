@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "pico/stdlib.h"
 #include "pico/flash.h"
 #include "pico/bootrom.h"
@@ -6,6 +7,7 @@
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
 
+#include "blinky-bin.h"
 #include "SWD.h"
 
 using namespace kc1fsz;
@@ -73,8 +75,6 @@ int flash(SWD& swd) {
         if (func_code == 0)
             break;
 
-        //printf("%04X Code %04X %c%c %X\n", tab_ptr, func_code, (func_code & 0xff), (func_code >> 8) & 0xff, func_addr);
-
         if (func_code == rom_table_code('I', 'F'))
             rom_connect_internal_flash_func = func_addr;
         else if (func_code == rom_table_code('E', 'X'))
@@ -106,6 +106,35 @@ int flash(SWD& swd) {
     // location
     if (const auto r = swd.writeWordViaAP(0x20000010, 0x47702008); r != 0)
         return -1;
+    
+    // Take size of binary and pad it up to a 4K boundary
+    unsigned int page_size = 4096;
+    unsigned int whole_pages = blinky_bin_len / page_size;
+    unsigned int remainder = blinky_bin_len % page_size;
+    // Make sure we are using full pages
+    if (remainder)
+        whole_pages++;
+    // Make a zero buffer large enough and copy in the code
+    void* buf = malloc(whole_pages * page_size); 
+    memset(buf, 0, whole_pages * page_size);
+    memcpy(buf, blinky_bin, blinky_bin_len);
+
+    unsigned int a = 0x20000100;     
+
+    // Copy the entire program into RAM (max 4x64k)
+    printf("Program bytes %u, words %u\n", (whole_pages * page_size), (whole_pages * page_size) / 4);
+    if (const auto r = swd.writeMultiWordViaAP(0x20000100, 
+        (const uint32_t*)buf, (whole_pages * page_size) / 4); r != 0)
+        return -1;
+
+    /*
+    rom_connect_internal_flash();
+    rom_flash_exit_xip();
+    // Erase and program
+    rom_flash_range_erase(0, code_len, 4096, 0xd8);
+    rom_flash_range_program(0, code, code_len);
+    rom_flash_flush_cache();
+    */
 
     // Write the target function address in the r7 register (+1 for thumb)
     if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x20000011); r != 0)
@@ -128,7 +157,7 @@ int flash(SWD& swd) {
         return -1;
 
     // Write a value in the MSP register
-    if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x20000400); r != 0)
+    if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x20000080); r != 0)
         return -1;
     // [16] is 1 (write), [6:0] 0b0001101 means MSP
     if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0001000d); r != 0) 
@@ -269,24 +298,19 @@ int main(int, const char**) {
         printf("DHCSR: %X\n", *r);
     }
 
-    // Read from the DT function location in ROM (not right for some reason)
-    unsigned int a = 0x000001ae;     
+    /*
+    unsigned int a = 0x000001a8;     
     if (const auto r = swd.readWordViaAP(a); !r.has_value()) {
         printf("Fai12 %d\n", r.error());
         return -1;
     } else {
         printf("At %08X = %08X\n", a, *r);
     }
-    a = 0x000001ae - 4;     
-    if (const auto r = swd.readWordViaAP(a); !r.has_value()) {
-        printf("Fai12 %d\n", r.error());
-        return -1;
-    } else {
-        printf("At %08X = %08X\n", a, *r);
-    }
+    */
 
     flash(swd);
 
+    // Leave debug
     if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000); r != 0) {
         printf("Fail10 %d\n", r);
     }

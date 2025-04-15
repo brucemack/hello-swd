@@ -96,19 +96,36 @@ public:
    /** 
      * IMPORTANT: This function assumes that the CSW has been 
      * configured for a 4-byte transfer and for auto-increment.
+     * 
+     * NOTE: Refer to the ARM IHI 0031A document in section 8.2.2.
+     * "Automatic address increment is only guaranteed to operate 
+     * on the bottom 10-bits of the address held in the TAR."
      */
    int writeMultiWordViaAP(uint32_t start_addr, const uint32_t* data, 
-        unsigned int data_count) {
-        // Write to the AP TAR register. This is the starting memory 
-        // address that we will be reading/writing from/to. Since
-        // auto-increment is enabled this only needs ot happen once.
-        if (const auto r = writeAP(0x4, start_addr); r != 0)
-            return r;
-        for (unsigned int i = 0; i < data_count; i++) {
+        unsigned int word_count) {
+        
+        uint32_t addr = start_addr, last_tar_addr = 0;
+        const uint32_t TEN_BITS = 0b1111111111;
+
+        for (unsigned int i = 0; i < word_count; i++) {
+
+            if (i == 0 || (addr & TEN_BITS) != (last_tar_addr & TEN_BITS)) {
+                // Write to the AP TAR register. This is the starting memory 
+                // address that we will be reading/writing from/to. Since
+                // auto-increment is enabled this only needs to happen when 
+                // we cross the 10-bit boundaries
+                if (const auto r = writeAP(0x4, addr); r != 0)
+                    return r;
+                last_tar_addr = addr;
+            }
+
             // Write to the AP DRW register
             if (const auto r = writeAP(0xc, *(data + i)); r != 0)
                 return r;
+
+            addr += 4;
         }
+
         return 0;
     }
 
