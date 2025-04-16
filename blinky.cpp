@@ -32,10 +32,6 @@ minicom -b 115200 -o -D /dev/ttyACM1
 
 #define LED_PIN (25)
 
-void test_function() {
-  printf("Hello World Function!\n");
-}
-
 int main() {
  
     stdio_init_all();
@@ -49,7 +45,6 @@ int main() {
     sleep_ms(500);
     
     printf("Hello World\n");
-    printf("The funciton is at %X\n", (unsigned int)test_function);
 
     unsigned int i = 0;
 
@@ -58,7 +53,7 @@ int main() {
       sleep_ms(500);
       gpio_put(LED_PIN, 1);
       sleep_ms(500);
-      printf("Loop %u\n", i++);
+      printf("Loop 2 %u\n", i++);
     }
 
 }

@@ -24,12 +24,12 @@ to prepare this test
 
 * Convert the blinky.bin to a C header file that will be included in the test.
 
-        xxd -g4 -i blinky.bin >> blinky-bin.h
+        xxd -g4 -i blinky.bin > ../blinky-bin.h
 
 The blinky binary will be loaded into the base of the flash (XIP) and then 
 a processor reset will be invoked.
 
 Here's a helpful command to create the disassembly listing:
 
-        arm-none-eabi-objdump -S flash-test-1.elf > flash-test-1.lst
+        arm-none-eabi-objdump -S blinky.elf > blinky.lst
         
