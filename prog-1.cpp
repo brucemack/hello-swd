@@ -301,8 +301,7 @@ std::expected<uint32_t, int> call_function(SWD& swd,
     }
 }
 
-
-int flash(SWD& swd) {
+int flash_and_verify(SWD& swd) {
 
     // DP SELECT - Set AP and DP bank 0
     if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0)
@@ -374,17 +373,6 @@ int flash(SWD& swd) {
         tab_ptr += 4;
     }
 
-    /* NOT NEED ANYMORE!
-    // Load the trampoline program into memory.  We're doing this because 
-    // the official _debug_trampoline() doesn't seem to work.
-    if (const auto r = swd.writeWordViaAP(0x20000000, 0x43372601); r != 0)
-        return -1;
-    if (const auto r = swd.writeWordViaAP(0x20000004, 0xbe0047b8); r != 0)
-        return -1;
-    if (const auto r = swd.writeWordViaAP(0x20000008, 0x46c0e7fa); r != 0)
-        return -1;
-    */
-
     // Load a small test program that sets r0 and returns.  Note the starting
     // location
     //
@@ -408,15 +396,28 @@ int flash(SWD& swd) {
         whole_pages++;
     // Make a zero buffer large enough and copy in the code
     unsigned int buf_len = whole_pages * page_size;
+    unsigned int buf_words = buf_len / 4;
     void* buf = malloc(buf_len); 
     memset(buf, 0, buf_len);
     memcpy(buf, blinky_bin, blinky_bin_len);
 
     // Copy the entire program into RAM (max 4x64k)
-    unsigned int a = 0x20000100;     
-    printf("Program bytes %u, words %u\n", buf_len, buf_len / 4);
-    if (const auto r = swd.writeMultiWordViaAP(a, (const uint32_t*)buf, buf_len / 4); r != 0)
+    const unsigned int ram_workarea = 0x20000100;     
+    printf("Program bytes %u\n", buf_len);
+    if (const auto r = swd.writeMultiWordViaAP(ram_workarea, (const uint32_t*)buf, buf_len / 4); r != 0)
         return -1;
+
+    if (const auto r = swd.readWordViaAP(0x10000000); !r.has_value()) {
+        return -1;
+    } else {
+        printf("@ 10000000    %08X\n", *r);
+    }
+
+    if (const auto r = swd.readWordViaAP(ram_workarea); !r.has_value()) {
+        return -1;
+    } else {
+        printf("@ %08X %08X\n", ram_workarea, *r);
+    }
 
     // These are the functions that need to be called:
     //
@@ -439,7 +440,7 @@ int flash(SWD& swd) {
         return -1;
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_exit_xip_func, 0, 0, 0, 0); !r.has_value())
         return -1;
-    if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_range_program_func, 0, a, buf_len, 0); !r.has_value())
+    if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_range_program_func, 0, ram_workarea, buf_len, 0); !r.has_value())
         return -1;
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_flush_cache_func, 0, 0, 0, 0); !r.has_value())
         return -1;
@@ -447,6 +448,7 @@ int flash(SWD& swd) {
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_enter_cmd_xip_func, 0, 0, 0, 0); !r.has_value())
         return -1;
 
+    /*
     // Mini program
     if (const auto r = call_function(swd, rom_debug_trampoline_func, 0x20000011, 0, 0, 0, 0); !r.has_value()) {
         return -1;
@@ -454,16 +456,35 @@ int flash(SWD& swd) {
     else {
         printf("Mini Program Return %08X\n", *r);
     }
-
-    /*
-    a = 0x10000000;
-    if (const auto r = swd.readWordViaAP(a); !r.has_value()) {
-        printf("Fai12 %d\n", r.error());
-        return -1;
-    } else {
-        printf("Post flash at %08X = %08X\n", a, *r);
-    }
     */
+
+    // Verification
+    uint32_t ram_ptr = ram_workarea;
+    uint32_t flash_ptr = 0x10000000;
+    
+    for (unsigned int i = 0; i < buf_words; i++) {
+
+        uint32_t ram, flash;
+
+        if (const auto r = swd.readWordViaAP(ram_ptr); !r.has_value()) {
+            return -1;
+        } else {
+            ram = *r;
+        }
+        if (const auto r = swd.readWordViaAP(flash_ptr); !r.has_value()) {
+            return -1;
+        } else {
+            flash = *r;
+        }
+
+        if (ram != flash) {
+            printf("Verify failure at word %08X RAM: %08X, FLASH: %08X\n", i, ram, flash);
+            break;
+        }
+
+        ram_ptr += 4;
+        flash_ptr += 4;
+    }
 
     return 0;
 }
@@ -541,10 +562,11 @@ int main(int, const char**) {
     // ----- RESET ------------------------------------------------------------
 
     // Enable debug mode and halt
-    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0003 | 0b1000); r != 0) 
+    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b1011); r != 0) 
         return -1;
 
     // Set DEMCR.VC_CORERESET=1 so that we come up in debug mode after reset
+    // (i.e. vector catch)
     if (const auto r = swd.writeWordViaAP(0xE000EDFC, 0x00000001); r != 0)
         return -1;
 
@@ -553,11 +575,9 @@ int main(int, const char**) {
         return -1;
 
     // ???
+    // TODO: Figure out what to poll for to avoid this race condition
     sleep_ms(10);
-
-    printf("----- After Reset -----\n");
-    display_status(swd);
-
+    
     // DP SELECT - Set AP and DP bank 0
     if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0) 
         return -1;
@@ -575,27 +595,11 @@ int main(int, const char**) {
     if (const auto r = swd.writeWordViaAP(0xe000ed08, 0x20000000); r != 0)
         return -1;
 
-    /*    
-    unsigned int a = 0x10000000;     
-    if (const auto r = swd.readWordViaAP(a); !r.has_value()) {
-        printf("Fai12 %d\n", r.error());
-        return -1;
-    } else {
-        printf("ROM At %08X = %08X\n", a, *r);
-    }
-    a += 4;
-    if (const auto r = swd.readWordViaAP(a); !r.has_value()) {
-        printf("Fai12 %d\n", r.error());
-        return -1;
-    } else {
-        printf("ROM At %08X = %08X\n", a, *r);
-    }
-    */
-
-    flash(swd);
+    // Here's where the actual flash happens
+    flash_and_verify(swd);
 
     // Finalize any last writes
-    swd.writeBitPattern("00000000");
+    //swd.writeBitPattern("00000000");
 
     // Leave debug
     if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000); r != 0) {
@@ -610,8 +614,6 @@ int main(int, const char**) {
 
     // Finalize any last writes
     swd.writeBitPattern("00000000");
-
-    printf("Blocking\n");
     
     while (true) {        
     }
