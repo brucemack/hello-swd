@@ -19,6 +19,3 @@ start_point:
 # Halt on return     
     bkpt #0
     b start_point
-
-    mov r0, #8
-    bkpt #0

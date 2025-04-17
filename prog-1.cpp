@@ -90,7 +90,7 @@ void display_status(SWD& swd) {
         r0 = *r;
     }
     uint32_t r7 = 0;
-    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x00000111); r != 0)
+    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x00000007); r != 0)
         return;
     if (swd.pollREGRDY() != 0)
         return;
@@ -142,6 +142,7 @@ void display_status(SWD& swd) {
         printf("DEMCR %08X\n", *r);
     }   
 
+    /*
     if (const auto r = swd.readWordViaAP(0x00000000); !r.has_value()) {
         return;
     } else {
@@ -152,7 +153,7 @@ void display_status(SWD& swd) {
     } else {
         printf("@4    %08X\n", *r);
     }
-
+    */
 }
 
 /**
@@ -227,8 +228,8 @@ std::expected<uint32_t, int> call_function(SWD& swd,
         return std::unexpected(-12);
 
     // Write a value into the debug return address value. 
-    //if (const auto r = swd.writeWordViaAP(ARM_DCRDR, trampoline_addr); r != 0)
-    if (const auto r = swd.writeWordViaAP(ARM_DCRDR, func_addr); r != 0)
+    if (const auto r = swd.writeWordViaAP(ARM_DCRDR, trampoline_addr); r != 0)
+    //if (const auto r = swd.writeWordViaAP(ARM_DCRDR, func_addr); r != 0)
         return std::unexpected(-10);
     // [16] is 1 (write), [6:0] 0b0001111 
     if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0001000f); r != 0) 
@@ -262,18 +263,18 @@ std::expected<uint32_t, int> call_function(SWD& swd,
     if (const auto r = swd.writeWordViaAP(0xE000ED30, dfsr); r != 0)
         return std::unexpected(-13);
 
-    printf("\nBefore Step\n");
+    printf("\n----- Before Resume -----\n");
     display_status(swd);
 
     // Single step
     //if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b101 | 0b1000); r != 0)
     //    return std::unexpected(-13);
 
-    // Remove halt, keep MASKINT and DEBUGEN
+    // Remove halt, keep MASKINT and DEBUGEN.  We should run until the breakpoint
     if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b001 | 0b1000); r != 0)
         return std::unexpected(-13);
 
-    printf("\nAfter Step\n");
+    printf("\n----- After Resume -----\n");
     display_status(swd);
 
     return 0;
@@ -407,11 +408,15 @@ int flash(SWD& swd) {
 
     // Load a small test program that sets r0 and returns.  Note the starting
     // location
-    //if (const auto r = swd.writeWordViaAP(0x20000010, 0x47702008); r != 0)
+    //
+    // MOV r0, #8
+    // # Return 
+    // bx lr
+    if (const auto r = swd.writeWordViaAP(0x20000010, 0x47702008); r != 0)
     //
     // MOV r0, #8
     // BKPR #0
-    if (const auto r = swd.writeWordViaAP(0x20000010, 0xbe002008); r != 0)
+    //if (const auto r = swd.writeWordViaAP(0x20000010, 0xbe002008); r != 0)
         return -1;
 
     /*    
@@ -436,6 +441,10 @@ int flash(SWD& swd) {
         return -1;
     */
 
+    // Mini program
+    //if (const auto r = call_function(swd, rom_debug_trampoline_func, 0x20000011, 0, 0, 0, 0); !r.has_value())
+    //    return -1;
+
     // These are the functions that need to be called:
     //
     // 0. connect_internal_flash();
@@ -444,10 +453,9 @@ int flash(SWD& swd) {
     // 3. flash_range_program(0, code, code_len);
     // 4. flash_flush_cache();
 
-    //if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_connect_internal_flash_func, 0, 0, 0, 0); !r.has_value())
-    if (const auto r = call_function(swd, rom_debug_trampoline_func, 0x20000011, 0, 0, 0, 0); !r.has_value())
+    if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_connect_internal_flash_func, 0, 0, 0, 0); !r.has_value())
         return -1;
-       
+           
     /*
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_exit_xip_func, 0, 0, 0, 0); !r.has_value())
         return -1;
