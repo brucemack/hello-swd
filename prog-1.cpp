@@ -270,43 +270,22 @@ std::expected<uint32_t, int> call_function(SWD& swd,
     //if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b101 | 0b1000); r != 0)
     //    return std::unexpected(-13);
 
-    // Remove halt, keep MASKINT and DEBUGEN.  We should run until the breakpoint
+    // Remove halt, keep MASKINT and DEBUGEN.  We should run until the BKPT #0 instruction
     if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b001 | 0b1000); r != 0)
         return std::unexpected(-13);
 
-    printf("\n----- After Resume -----\n");
-    display_status(swd);
-
-    return 0;
-
-
-    // Leave halt mode so that things can happen, but keep the interrupts
-    // masked.
-    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b1000); r != 0)
-        return std::unexpected(-13);
-
-    unsigned int j = 0;
+    // Poll, looking for the debug halt status
     while (true) {
-
-        // Enter debug, with interrupts disabled.
-        if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0003 | 0b1000); r != 0)
-            return std::unexpected(-13);
-
-        printf("After Status [2]\n");
-        display_status(swd);
-
-        sleep_ms(30000);
-
-        // Leave halt mode so that things can bappen
-        if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b1000); r != 0)
-            return std::unexpected(-13);
+        if (const auto r = swd.readWordViaAP(0xe000edf0); !r.has_value()) {
+            return std::unexpected(-14);
+        } else {
+            if (*r == 0x0003000B)
+                break;
+        }
     }
 
-    // We should immediately hit a breakpoint here
-
-    // Re-enter debug mode
-    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0003); r != 0)
-        return std::unexpected(-14);
+    printf("\n----- After Resume -----\n");
+    display_status(swd);
 
     // Read back from the r0 register
     // [16] is 0 (read), [6:0] 0b0000000 means r0
@@ -413,13 +392,13 @@ int flash(SWD& swd) {
     // # Return 
     // bx lr
     if (const auto r = swd.writeWordViaAP(0x20000010, 0x47702008); r != 0)
+        return -1;
     //
     // MOV r0, #8
     // BKPR #0
     //if (const auto r = swd.writeWordViaAP(0x20000010, 0xbe002008); r != 0)
-        return -1;
+    //   return -1;
 
-    /*    
     // Take size of binary and pad it up to a 4K boundary
     unsigned int page_size = 4096;
     unsigned int whole_pages = blinky_bin_len / page_size;
@@ -433,17 +412,11 @@ int flash(SWD& swd) {
     memset(buf, 0, buf_len);
     memcpy(buf, blinky_bin, blinky_bin_len);
 
-    unsigned int a = 0x20000100;     
-
     // Copy the entire program into RAM (max 4x64k)
+    unsigned int a = 0x20000100;     
     printf("Program bytes %u, words %u\n", buf_len, buf_len / 4);
     if (const auto r = swd.writeMultiWordViaAP(a, (const uint32_t*)buf, buf_len / 4); r != 0)
         return -1;
-    */
-
-    // Mini program
-    //if (const auto r = call_function(swd, rom_debug_trampoline_func, 0x20000011, 0, 0, 0, 0); !r.has_value())
-    //    return -1;
 
     // These are the functions that need to be called:
     //
@@ -455,13 +428,12 @@ int flash(SWD& swd) {
 
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_connect_internal_flash_func, 0, 0, 0, 0); !r.has_value())
         return -1;
-           
-    /*
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_exit_xip_func, 0, 0, 0, 0); !r.has_value())
         return -1;
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_range_erase_func, 0, buf_len, 1 << 16, 0xd8); !r.has_value())
         return -1;
-
+    if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_flush_cache_func, 0, 0, 0, 0); !r.has_value())
+        return -1;
 
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_connect_internal_flash_func, 0, 0, 0, 0); !r.has_value())
         return -1;
@@ -472,11 +444,18 @@ int flash(SWD& swd) {
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_flush_cache_func, 0, 0, 0, 0); !r.has_value())
         return -1;
 
-    if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_flush_cache_func, 0, 0, 0, 0); !r.has_value())
-        return -1;
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_enter_cmd_xip_func, 0, 0, 0, 0); !r.has_value())
         return -1;
 
+    // Mini program
+    if (const auto r = call_function(swd, rom_debug_trampoline_func, 0x20000011, 0, 0, 0, 0); !r.has_value()) {
+        return -1;
+    }
+    else {
+        printf("Mini Program Return %08X\n", *r);
+    }
+
+    /*
     a = 0x10000000;
     if (const auto r = swd.readWordViaAP(a); !r.has_value()) {
         printf("Fai12 %d\n", r.error());
