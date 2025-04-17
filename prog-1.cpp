@@ -23,7 +23,7 @@ static uint32_t rom_table_code(char c1, char c2) {
 
 void display_status(SWD& swd) {
 
-    // Read PC
+    uint32_t pc = 0;
     if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0000000f); r != 0)
         return;
     if (swd.pollREGRDY() != 0)
@@ -31,9 +31,10 @@ void display_status(SWD& swd) {
     if (const auto r = swd.readWordViaAP(ARM_DCRDR); !r.has_value()) {
         return;
     } else {
-        printf("PC    %08X\n", *r);
+        pc = *r;
     }
-    // Read LR
+
+    uint32_t lr = 0;
     if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0000000e); r != 0)
         return;
     if (swd.pollREGRDY() != 0)
@@ -41,8 +42,22 @@ void display_status(SWD& swd) {
     if (const auto r = swd.readWordViaAP(ARM_DCRDR); !r.has_value()) {
         return;
     } else {
-        printf("LR    %08X\n", *r);
+        lr = *r;
     }
+
+    uint32_t msp = 0;
+    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0b10001); r != 0)
+        return;
+    if (swd.pollREGRDY() != 0)
+        return;
+    if (const auto r = swd.readWordViaAP(ARM_DCRDR); !r.has_value()) {
+        return;
+    } else {
+        msp = *r;
+    }
+
+    printf("PC=%08X, LR=%08X, MSP=%08X\n", pc, lr, msp);
+
     // Read XPSR
     if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x00000010); r != 0)
         return;
@@ -53,7 +68,18 @@ void display_status(SWD& swd) {
     } else {
         printf("XSPR  %08X\n", *r);
     }
-    // Read R0
+    // Read (combined)
+    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0b10100); r != 0)
+        return;
+    if (swd.pollREGRDY() != 0)
+        return;
+    if (const auto r = swd.readWordViaAP(ARM_DCRDR); !r.has_value()) {
+        return;
+    } else {
+        printf("CTL/PRIMASK  %08X\n", *r);
+    }
+
+    uint32_t r0 = 0;
     if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x00000000); r != 0)
         return;
     if (swd.pollREGRDY() != 0)
@@ -61,8 +87,20 @@ void display_status(SWD& swd) {
     if (const auto r = swd.readWordViaAP(ARM_DCRDR); !r.has_value()) {
         return;
     } else {
-        printf("r0    %08X\n", *r);
+        r0 = *r;
     }
+    uint32_t r7 = 0;
+    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x00000111); r != 0)
+        return;
+    if (swd.pollREGRDY() != 0)
+        return;
+    if (const auto r = swd.readWordViaAP(ARM_DCRDR); !r.has_value()) {
+        return;
+    } else {
+        r7 = *r;
+    }
+
+    printf("r0=%08X, r7=%08X\n", r0, r7);
 
     if (const auto r = swd.readWordViaAP(0xe000ed0c); !r.has_value()) {
         return;
@@ -96,6 +134,25 @@ void display_status(SWD& swd) {
     else {
         printf("DFSR  %08X\n", *r);
     }
+
+    if (const auto r = swd.readWordViaAP(0xE000EDFC); !r.has_value()) {
+        return;
+    }
+    else {
+        printf("DEMCR %08X\n", *r);
+    }   
+
+    if (const auto r = swd.readWordViaAP(0x00000000); !r.has_value()) {
+        return;
+    } else {
+        printf("@0    %08X\n", *r);
+    }
+    if (const auto r = swd.readWordViaAP(0x00000004); !r.has_value()) {
+        return;
+    } else {
+        printf("@4    %08X\n", *r);
+    }
+
 }
 
 /**
@@ -170,7 +227,8 @@ std::expected<uint32_t, int> call_function(SWD& swd,
         return std::unexpected(-12);
 
     // Write a value into the debug return address value. 
-    if (const auto r = swd.writeWordViaAP(ARM_DCRDR, trampoline_addr); r != 0)
+    //if (const auto r = swd.writeWordViaAP(ARM_DCRDR, trampoline_addr); r != 0)
+    if (const auto r = swd.writeWordViaAP(ARM_DCRDR, func_addr); r != 0)
         return std::unexpected(-10);
     // [16] is 1 (write), [6:0] 0b0001111 
     if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0001000f); r != 0) 
@@ -204,17 +262,28 @@ std::expected<uint32_t, int> call_function(SWD& swd,
     if (const auto r = swd.writeWordViaAP(0xE000ED30, dfsr); r != 0)
         return std::unexpected(-13);
 
-    printf("Before Status\n");
+    printf("\nBefore Step\n");
     display_status(swd);
 
-    // Leave halt mode so that things can bappen
+    // Single step
+    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b101 | 0b1000); r != 0)
+        return std::unexpected(-13);
+
+    printf("\nAfter Step\n");
+    display_status(swd);
+
+    return 0;
+
+
+    // Leave halt mode so that things can happen, but keep the interrupts
+    // masked.
     if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b1000); r != 0)
         return std::unexpected(-13);
 
     unsigned int j = 0;
     while (true) {
 
-        // Enter debug
+        // Enter debug, with interrupts disabled.
         if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0003 | 0b1000); r != 0)
             return std::unexpected(-13);
 
@@ -336,7 +405,8 @@ int flash(SWD& swd) {
     // location
     if (const auto r = swd.writeWordViaAP(0x20000010, 0x47702008); r != 0)
         return -1;
-    
+
+    /*    
     // Take size of binary and pad it up to a 4K boundary
     unsigned int page_size = 4096;
     unsigned int whole_pages = blinky_bin_len / page_size;
@@ -356,13 +426,7 @@ int flash(SWD& swd) {
     printf("Program bytes %u, words %u\n", buf_len, buf_len / 4);
     if (const auto r = swd.writeMultiWordViaAP(a, (const uint32_t*)buf, buf_len / 4); r != 0)
         return -1;
-
-    if (const auto r = swd.readWordViaAP(a); !r.has_value()) {
-        printf("Fai12 %d\n", r.error());
-        return -1;
-    } else {
-        printf("RAM At %08X = %08X\n", a, *r);
-    }
+    */
 
     // These are the functions that need to be called:
     //
@@ -495,6 +559,9 @@ int main(int, const char**) {
 
     // ???
     sleep_ms(10);
+
+    printf("----- After Reset -----\n");
+    display_status(swd);
 
     // DP SELECT - Set AP and DP bank 0
     if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0) 
