@@ -144,6 +144,8 @@ void display_status(SWD& swd) {
 }
 
 /**
+ * Calls a function via the PICO debug_trampoline() helper function.
+ * 
  * IMPORTANT: We are assuming the target is already in debug/halt mode 
  * when this function is called.  On exit, this target will still be 
  * in debug/halt mode.
@@ -216,7 +218,6 @@ std::expected<uint32_t, int> call_function(SWD& swd,
 
     // Write a value into the debug return address value. 
     if (const auto r = swd.writeWordViaAP(ARM_DCRDR, trampoline_addr); r != 0)
-    //if (const auto r = swd.writeWordViaAP(ARM_DCRDR, func_addr); r != 0)
         return std::unexpected(-10);
     // [16] is 1 (write), [6:0] 0b0001111 
     if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0001000f); r != 0) 
@@ -225,6 +226,8 @@ std::expected<uint32_t, int> call_function(SWD& swd,
     if (swd.pollREGRDY() != 0)
         return std::unexpected(-12);
 
+    // NOTE: IS THIS NEEDED SINCE WE HAVE MASKED IN THE DHCSR??
+    /*
     // Mask interrupts
     if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x00000001); r != 0)
         return std::unexpected(-10);
@@ -234,10 +237,12 @@ std::expected<uint32_t, int> call_function(SWD& swd,
     // Poll to find out if the write is done
     if (swd.pollREGRDY() != 0)
         return std::unexpected(-12);
+    */
 
+    // NOTE: IS THIS NEEDED SINCE WE HAVE MASKED IN THE DHCSR??
     // Clear pending interrupts
-    if (const auto r = swd.writeWordViaAP(0xE000E280, 0xffffffff); r != 0)
-        return std::unexpected(-13);
+    //if (const auto r = swd.writeWordViaAP(0xE000E280, 0xffffffff); r != 0)
+    //    return std::unexpected(-13);
 
     // Clear DFSR
     uint32_t dfsr = 0;
@@ -558,7 +563,10 @@ int main(int, const char**) {
         return -1;
 
     // Here's where the actual flash happens
-    flash_and_verify(swd);
+    if (flash_and_verify(swd) != 0) {
+        printf("Flashed failed\n");
+        return -1;
+    }
 
     // Leave debug
     if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000); r != 0) 
