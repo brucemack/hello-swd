@@ -141,19 +141,6 @@ void display_status(SWD& swd) {
     else {
         printf("DEMCR %08X\n", *r);
     }   
-
-    /*
-    if (const auto r = swd.readWordViaAP(0x00000000); !r.has_value()) {
-        return;
-    } else {
-        printf("@0    %08X\n", *r);
-    }
-    if (const auto r = swd.readWordViaAP(0x00000004); !r.has_value()) {
-        return;
-    } else {
-        printf("@4    %08X\n", *r);
-    }
-    */
 }
 
 /**
@@ -263,8 +250,8 @@ std::expected<uint32_t, int> call_function(SWD& swd,
     if (const auto r = swd.writeWordViaAP(0xE000ED30, dfsr); r != 0)
         return std::unexpected(-13);
 
-    printf("\n----- Before Resume -----\n");
-    display_status(swd);
+    //printf("\n----- Before Resume -----\n");
+    //display_status(swd);
 
     // Single step
     //if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b101 | 0b1000); r != 0)
@@ -284,8 +271,8 @@ std::expected<uint32_t, int> call_function(SWD& swd,
         }
     }
 
-    printf("\n----- After Resume -----\n");
-    display_status(swd);
+    //printf("\n----- After Resume -----\n");
+    //display_status(swd);
 
     // Read back from the r0 register
     // [16] is 0 (read), [6:0] 0b0000000 means r0
@@ -403,29 +390,21 @@ int flash_and_verify(SWD& swd) {
 
     // Copy the entire program into RAM (max 4x64k)
     const unsigned int ram_workarea = 0x20000100;     
-    printf("Program bytes %u\n", buf_len);
+    printf("Programing %u bytes ...\n", buf_len);
     if (const auto r = swd.writeMultiWordViaAP(ram_workarea, (const uint32_t*)buf, buf_len / 4); r != 0)
         return -1;
-
-    if (const auto r = swd.readWordViaAP(0x10000000); !r.has_value()) {
-        return -1;
-    } else {
-        printf("@ 10000000    %08X\n", *r);
-    }
-
-    if (const auto r = swd.readWordViaAP(ram_workarea); !r.has_value()) {
-        return -1;
-    } else {
-        printf("@ %08X %08X\n", ram_workarea, *r);
-    }
 
     // These are the functions that need to be called:
     //
     // 0. connect_internal_flash();
     // 1. flash_exit_xip();
-    // 2. flash_range_erase(0, code_len, 4096, 0xd8);
-    // 3. flash_range_program(0, code, code_len);
-    // 4. flash_flush_cache();
+    // 2. flash_range_erase(0, ram_len_in_bytes, 4096, 0xd8);
+    // 3. flash_flush_cache();
+    // 4. connect_internal_flash();
+    // 5. flash_exit_xip();
+    // 6. flash_range_program(0, ram_ptr, ram_len_in_bytes);
+    // 7. flash_flush_cache();
+    // 8. flash_enter_cmd_xip();
 
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_connect_internal_flash_func, 0, 0, 0, 0); !r.has_value())
         return -1;
@@ -448,17 +427,8 @@ int flash_and_verify(SWD& swd) {
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_enter_cmd_xip_func, 0, 0, 0, 0); !r.has_value())
         return -1;
 
-    /*
-    // Mini program
-    if (const auto r = call_function(swd, rom_debug_trampoline_func, 0x20000011, 0, 0, 0, 0); !r.has_value()) {
-        return -1;
-    }
-    else {
-        printf("Mini Program Return %08X\n", *r);
-    }
-    */
-
     // Verification
+    printf("Verifying ...\n");
     uint32_t ram_ptr = ram_workarea;
     uint32_t flash_ptr = 0x10000000;
     
@@ -519,33 +489,28 @@ int main(int, const char**) {
     // DP SELECT - Set AP bank F, DP bank 0
     // [31:24] AP Select
     // [7:4]   AP Bank Select (the active four-word bank)
-    if (const auto r = swd.writeDP(0b1000, 0x000000f0); r != 0) {
-        printf("Fail5 %d\n", r);
+    if (const auto r = swd.writeDP(0b1000, 0x000000f0); r != 0)
         return -1;
-    }
 
     // Read AP addr 0xFC. [7:4] bank address set previously, [3:0] set here.
     // 0xFC is the AP identification register.
     // The actual data comes back during the DP RDBUFF read
-    if (const auto r = swd.readAP(0x0c); !r.has_value()) {
-        printf("Fail6 %d\n", r.error());
+    if (const auto r = swd.readAP(0x0c); !r.has_value())
         return -1;
-    }
 
     // DP RDBUFF - Read AP result
     if (const auto r = swd.readDP(0xc); !r.has_value()) {
-        printf("Fail7 %d\n", r.error());
         return -1;
     } else {
         printf("AP ID %X\n", *r);
 
     }
 
+    // Leave the debug system in the proper state (post-reset)
+
     // DP SELECT - Set AP and DP bank 0
-    if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0) {
-        printf("Fail9 %d\n", r);
+    if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0)
         return -1;
-    }
 
     // Write to the AP Control/Status Word (CSW), auto-increment, word values
     //
@@ -553,11 +518,8 @@ int main(int, const char**) {
     // 
     // [5:4] 01  : Auto Increment set to "Increment Single," which increments by the size of the access.
     // [2:0] 010 : Size of the access to perform, which is 32 bits in this case. 
-    //if (const auto r = swd.writeAP(0b0000, 0xa2000012); r != 0) {
-    if (const auto r = swd.writeAP(0b0000, 0x22000012); r != 0) {
-        printf("Fail8 %d\n", r);
+    if (const auto r = swd.writeAP(0b0000, 0x22000012); r != 0)
         return -1;
-    }
 
     // ----- RESET ------------------------------------------------------------
 
@@ -598,19 +560,15 @@ int main(int, const char**) {
     // Here's where the actual flash happens
     flash_and_verify(swd);
 
-    // Finalize any last writes
-    //swd.writeBitPattern("00000000");
-
     // Leave debug
-    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000); r != 0) {
-        printf("Fail10 %d\n", r);
-    }
+    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000); r != 0) 
+        return -1;
 
     // Trigger a reset by writing SYSRESETREQ to NVIC.AIRCR.
     printf("Resetting ...\n");
-    if (const auto r = swd.writeWordViaAP(0xe000ed0c, 0x05fa0004); r != 0) {
-        printf("Fail10 %d\n", r);
-    }
+
+    if (const auto r = swd.writeWordViaAP(0xe000ed0c, 0x05fa0004); r != 0) 
+        return -1;
 
     // Finalize any last writes
     swd.writeBitPattern("00000000");
