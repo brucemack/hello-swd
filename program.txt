@@ -779,6 +779,8 @@ Debug: 631 3003 target.c:1901 print_wa_layout(): b* 0x20010800-0x2001ffff (63488
 Debug: 632 3003 rp2040.c:745 rp2040_flash_write(): Allocated flash bounce buffer @0x20010800
 Debug: 633 3003 rp2040.c:749 rp2040_flash_write(): Writing 37120 bytes to offset 0x0
 Debug: 634 3003 target.c:2345 target_write_buffer(): writing buffer of 37120 byte at 0x20010800
+
+
 Debug: 635 4048 rp2040.c:428 rp2xxx_call_rom_func_batch(): Calling batch of 1 ROM functions:
 Debug: 636 4048 rp2040.c:430 rp2xxx_call_rom_func_batch():   func @ 23c5
 Debug: 637 4048 rp2040.c:431 rp2xxx_call_rom_func_batch():     sp = 20010400

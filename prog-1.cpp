@@ -266,7 +266,11 @@ std::expected<uint32_t, int> call_function(SWD& swd,
     display_status(swd);
 
     // Single step
-    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b101 | 0b1000); r != 0)
+    //if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b101 | 0b1000); r != 0)
+    //    return std::unexpected(-13);
+
+    // Remove halt, keep MASKINT and DEBUGEN
+    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b001 | 0b1000); r != 0)
         return std::unexpected(-13);
 
     printf("\nAfter Step\n");
@@ -403,7 +407,11 @@ int flash(SWD& swd) {
 
     // Load a small test program that sets r0 and returns.  Note the starting
     // location
-    if (const auto r = swd.writeWordViaAP(0x20000010, 0x47702008); r != 0)
+    //if (const auto r = swd.writeWordViaAP(0x20000010, 0x47702008); r != 0)
+    //
+    // MOV r0, #8
+    // BKPR #0
+    if (const auto r = swd.writeWordViaAP(0x20000010, 0xbe002008); r != 0)
         return -1;
 
     /*    
