@@ -226,24 +226,6 @@ std::expected<uint32_t, int> call_function(SWD& swd,
     if (swd.pollREGRDY() != 0)
         return std::unexpected(-12);
 
-    // NOTE: IS THIS NEEDED SINCE WE HAVE MASKED IN THE DHCSR??
-    /*
-    // Mask interrupts
-    if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x00000001); r != 0)
-        return std::unexpected(-10);
-    // [16] is 1 (write), [4:0] 0b010100 
-    if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x00010014); r != 0) 
-        return std::unexpected(-11);
-    // Poll to find out if the write is done
-    if (swd.pollREGRDY() != 0)
-        return std::unexpected(-12);
-    */
-
-    // NOTE: IS THIS NEEDED SINCE WE HAVE MASKED IN THE DHCSR??
-    // Clear pending interrupts
-    //if (const auto r = swd.writeWordViaAP(0xE000E280, 0xffffffff); r != 0)
-    //    return std::unexpected(-13);
-
     // Clear DFSR
     uint32_t dfsr = 0;
     if (const auto r = swd.readWordViaAP(0xE000ED30); !r.has_value()) {

@@ -28,24 +28,12 @@ void SWD::init() {
 
 int SWD::connect() {   
 
-    // Long period with DIO=1, CLK=0
-    setDIO(true);
-    sleep_us(1655);
-    writeBitPattern("11111111");
-
-    sleep_us(1);
-
-    // JTAG-TO-DS Conversion
-    writeJTAGToDSConversion();
-
-    sleep_us(1);
-
-    // Delay with CLK=0/DIO=0
     setDIO(false);
-    sleep_us(160);
-    // 8 clocks with DIO=1
     writeBitPattern("11111111");
+
+    // For ease of tracing
     sleep_us(1);
+
     // Selection alert (128 bits)
     writeSelectionAlert();   
     // ARM Coresight activation code
@@ -57,22 +45,17 @@ int SWD::connect() {
     // Line reset
     writeLineReset();
 
-    // TODO: IS THIS STUFF NEEDED?
+    // Verified required
     writeBitPattern("00000000");
-    // Delay with CLK=0/DIO=0
-    setDIO(false);
-    sleep_us(150);
+
+    // For ease of tracing
+    sleep_us(1);
 
     // DP TARGETSEL, DP for Core 0.  We ignore the ACK here
     if (const auto r = writeDP(0b1100, 0x01002927, true); r != 0) {
         printf("DP TARGETSEL write failed %d\n", r);
         return -1;
     }
-
-    // TODO: IS THIS NEEDED?
-    // Delay with CLK=0/DIO=0
-    setDIO(false);
-    sleep_us(732);
 
     // Read the ID code
     if (const auto r = readDP(0b0000); r.has_value()) {
@@ -86,22 +69,18 @@ int SWD::connect() {
     // FOLLOWING PICOREG
 
     // Abort
-    if (const auto r = writeDP(0b0000, 0x0000001e); r != 0) {
-        printf("Fail1 %d\n", r);
+    if (const auto r = writeDP(0b0000, 0x0000001e); r != 0)
         return -1;
-    }
 
     // Set AP and DP bank 0
-    if (const auto r = writeDP(0b1000, 0x00000000); r != 0) {
-        printf("Fail2 %d\n", r);
+    if (const auto r = writeDP(0b1000, 0x00000000); r != 0)
         return -1;
-    }
 
     // Power up
-    if (const auto r = writeDP(0b0100, 0x50000001); r != 0) {
-        printf("Fail3 %d\n", r);
+    if (const auto r = writeDP(0b0100, 0x50000001); r != 0)
         return -1;
-    }
+
+    // TODO: POLLING FOR POWER UP NEEDED?
 
     // Read DP CTRLSEL
     if (const auto r = readDP(0b0100); !r.has_value()) {
