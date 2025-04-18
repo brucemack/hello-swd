@@ -11,11 +11,13 @@ static const char* SELECTION_ALERT = "0100_1001_1100_1111_1001_0000_0100_0110_10
 static const char* ACTIVATION_CODE = "0000_0101_1000_1111";
 
 // This is supposed to be AEEE_EEE6 (MSB first), but only the last 30 bits are used
-static const char* JTAG_TO_DS_CONVERSION = "1010_1110_1110_1110_1110_1110_1110_0110";
+//static const char* JTAG_TO_DS_CONVERSION = "1010_1110_1110_1110_1110_1110_1110_0110";
 
 
 #define CLK_PIN (2)
 #define DIO_PIN (3)
+
+#define DAP_ADDR_CORE0 (0x01002927)
 
 void SWD::init() {
     gpio_set_dir(CLK_PIN, GPIO_OUT);        
@@ -34,30 +36,73 @@ int SWD::connect() {
     // For ease of tracing
     sleep_us(1);
 
+    // From "Low Pin-count Debug Interfaces for Multi-device Systems"
+    // by Michael Williams
+    //
+    // "Hence the designers of multi-drop SWD chose an unlikely
+    // data sequence approach. The selection message consists of a
+    // 128-bit selection alert, followed by a protocol selection
+    // command. This selection alert method has been adopted by
+    // IEEE 1149.7, and multi-drop SWD has adopted the IEEE
+    // 1149.7 protocol selection command, ensuring compatibility
+    // between the two protocols."
+
     // Selection alert (128 bits)
     writeSelectionAlert();   
     // ARM Coresight activation code
-    writeActivaionCode();
+    writeActivationCode();
 
     // Here is where we start to follow the protocol described
     // in ARM IHI0031A section 5.4.1.
+    //
+    // More specifically, this from IHI0031G section B4.3.4:
+    //
+    // B4.3.4 Target selection protocol, SWD protocol version 2
+    // ---------------------------------------------------------
+    // 1. Perform a line reset. See Figure B4-9 on page B4-124.
+    // 2. Write to DP register 0xC, TARGETSEL, where the data indicates 
+    //    the selected target. The target response must be ignored. See Figure 
+    //    B4-9 on page B4-124.
+    // 3. Read from the DP register 0x0, DPIDR, to verify that the target 
+    // has been successfully selected.
 
     // Line reset
     writeLineReset();
 
-    // Verified required
+    // Testing verified that this is required
     writeBitPattern("00000000");
 
     // For ease of tracing
     sleep_us(1);
 
-    // DP TARGETSEL, DP for Core 0.  We ignore the ACK here
-    if (const auto r = writeDP(0b1100, 0x01002927, true); r != 0) {
-        printf("DP TARGETSEL write failed %d\n", r);
+    // DP TARGETSEL, DP for Core 0.  We ignore the ACK here!
+    // At this point there are multiple cores listening on the 
+    // SWD bus (i.e. multi-drop) so this selection determines 
+    // which one is activated. This is the reason that there 
+    // is no ACK - we don't want the cores interfering with each 
+    // other's response.
+    //
+    // Some RP2040-specific commentary (from the datasheet):
+    //
+    // Debug access is via independent DAPs (one per core) attached to a 
+    // shared multidrop SWD bus (SWD v2). Each DAP will only respond to 
+    // debug commands if correctly addressed by a SWD TARGETSEL command; 
+    // all others tristate their outputs.  Additionally, a Rescue DP (see 
+    // Section 2.3.4.2) is available which is connected to system control 
+    // features. Default addresses of each debug port are given below:
+    //
+    // Core 0   : 0x01002927
+    // Core 1   : 0x11002927
+    // Rescue DP: 0xf1002927
+    // 
+    // The Instance IDs (top 4 bits of ID above) can be changed via a sysconfig 
+    // register which may be useful in a multichip application. However note 
+    // that ID=0xf is reserved for the internal Rescue DP (see Section 2.3.4.2).
+    //
+    if (const auto r = writeDP(0b1100, DAP_ADDR_CORE0, true); r != 0) 
         return -1;
-    }
 
-    // Read the ID code
+    // Read from the ID CODE register
     if (const auto r = readDP(0b0000); r.has_value()) {
         // Good outcome
     }
@@ -66,9 +111,7 @@ int SWD::connect() {
         return -1;
     }
 
-    // FOLLOWING PICOREG
-
-    // Abort
+    // Abort (in case anything is in process)
     if (const auto r = writeDP(0b0000, 0x0000001e); r != 0)
         return -1;
 
@@ -82,11 +125,11 @@ int SWD::connect() {
 
     // TODO: POLLING FOR POWER UP NEEDED?
 
-    // Read DP CTRLSEL
+    // Read DP CTRLSEL and check for CSYSPWRUPACK and CDBGPWRUPACK
     if (const auto r = readDP(0b0100); !r.has_value()) {
-        printf("Fail4 %d\n", r.error());
         return -1;
     } else {
+        // TODO: MAKE SURE THIS STILL WORKS
         if ((*r & 0x80000000) && (*r & 0x20000000))
             return 0;
         else
@@ -315,17 +358,16 @@ void SWD::writeSelectionAlert() {
     writeBitPattern(SELECTION_ALERT);
 }
 
-void SWD::writeActivaionCode() {
+void SWD::writeActivationCode() {
     writeBitPattern(ACTIVATION_CODE);
 }
 
-void SWD::writeJTAGToDSConversion() {
-    writeBitPattern(JTAG_TO_DS_CONVERSION);
-}
+//void SWD::writeJTAGToDSConversion() {
+//    writeBitPattern(JTAG_TO_DS_CONVERSION);
+//}
 
 void SWD::_delayPeriod() {
     sleep_us(1);
-    //busy_wait_us_32(1);9999999
 }
 
 }

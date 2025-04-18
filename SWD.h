@@ -23,7 +23,6 @@ public:
      */
     int connect();
 
-
     // NOTE: Slave captures outbound data on the rising edge of the clock
     void writeBit(bool b);
     // NOTE: Master captures inbound data on the falling edge of the clock
@@ -38,8 +37,8 @@ public:
     void writeLineReset();
 
     void writeSelectionAlert();
-    void writeActivaionCode();
-    void writeJTAGToDSConversion();
+    void writeActivationCode();
+    //void writeJTAGToDSConversion();
 
     /**
      * @param addr 4-bit address, but [1:0] are always zero
