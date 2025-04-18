@@ -50,9 +50,14 @@ int SWD::connect() {
     writeSelectionAlert();   
     // ARM Coresight activation code
     writeActivaionCode();
+
+    // Here is where we start to follow the protocol described
+    // in ARM IHI0031A section 5.4.1.
+
     // Line reset
     writeLineReset();
 
+    // TODO: IS THIS STUFF NEEDED?
     writeBitPattern("00000000");
     // Delay with CLK=0/DIO=0
     setDIO(false);
@@ -64,12 +69,15 @@ int SWD::connect() {
         return -1;
     }
 
+    // TODO: IS THIS NEEDED?
     // Delay with CLK=0/DIO=0
     setDIO(false);
     sleep_us(732);
 
     // Read the ID code
-    if (const auto r = readDP(0b0000); r.has_value()) {}
+    if (const auto r = readDP(0b0000); r.has_value()) {
+        // Good outcome
+    }
     else {
         printf("IDCODE ERROR %d\n", r.error());
         return -1;
