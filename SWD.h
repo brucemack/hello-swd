@@ -15,6 +15,8 @@ class SWD {
 
 public:
 
+    SWD(unsigned int clock_pin, unsigned int dio_pin);
+
     void init();
 
     /**
@@ -38,7 +40,6 @@ public:
 
     void writeSelectionAlert();
     void writeActivationCode();
-    //void writeJTAGToDSConversion();
 
     /**
      * @param addr 4-bit address, but [1:0] are always zero
@@ -81,16 +82,7 @@ public:
      * IMPORTANT: This function assumes that the CSW has been 
      * configured for a 4-byte transfer.
      */
-    int writeWordViaAP(uint32_t addr, uint32_t data) {
-        // Write to the AP TAR register. This is the memory address that we will 
-        // be reading/writing from/to.
-        if (const auto r = writeAP(0x4, addr); r != 0)
-            return r;
-        // Write to the AP DRW register
-        if (const auto r = writeAP(0xc, data); r != 0)
-            return r;
-        return 0;
-    }
+    int writeWordViaAP(uint32_t addr, uint32_t data);
 
    /** 
      * IMPORTANT: This function assumes that the CSW has been 
@@ -101,32 +93,7 @@ public:
      * on the bottom 10-bits of the address held in the TAR."
      */
    int writeMultiWordViaAP(uint32_t start_addr, const uint32_t* data, 
-        unsigned int word_count) {
-        
-        uint32_t addr = start_addr, last_tar_addr = 0;
-        const uint32_t TEN_BITS = 0b1111111111;
-
-        for (unsigned int i = 0; i < word_count; i++) {
-
-            if (i == 0 || (addr & TEN_BITS) != (last_tar_addr & TEN_BITS)) {
-                // Write to the AP TAR register. This is the starting memory 
-                // address that we will be reading/writing from/to. Since
-                // auto-increment is enabled this only needs to happen when 
-                // we cross the 10-bit boundaries
-                if (const auto r = writeAP(0x4, addr); r != 0)
-                    return r;
-                last_tar_addr = addr;
-            }
-
-            // Write to the AP DRW register
-            if (const auto r = writeAP(0xc, *(data + i)); r != 0)
-                return r;
-
-            addr += 4;
-        }
-
-        return 0;
-    }
+        unsigned int word_count);
 
     /**
      * IMPORTANT: This function assumes that the appropriate AP
@@ -137,24 +104,7 @@ public:
      * IMPORTANT: This function assumes that the CSW has been 
      * configured for a 4-byte transfer.
      */
-    std::expected<uint32_t, int> readWordViaAP(uint32_t addr) {
-
-        // Write to the AP TAR register. This is the memory address that we will 
-        // be reading/writing from/to.
-        if (const auto r = writeAP(0x4, addr); r != 0) {
-            return std::unexpected(r);
-        }
-        // Read from the AP DRW register (actual data is buffered and comes later)
-        if (const auto r = readAP(0xc); !r.has_value()) {
-            return std::unexpected(r.error());
-        }
-        // Fetch result of previous AP read
-        if (const auto r = readDP(0xc); !r.has_value()) {
-            return std::unexpected(r.error());
-        } else {
-            return *r;
-        }
-    }
+    std::expected<uint32_t, int> readWordViaAP(uint32_t addr);
 
     /**
      * IMPORTANT: This function assumes that the appropriate AP
@@ -165,45 +115,13 @@ public:
      * IMPORTANT: This function assumes that the CSW has been 
      * configured for a 2-byte transfer.
      */
-    std::expected<uint16_t, int> readHalfWordViaAP(uint32_t addr) {
-
-        // Write to the AP TAR register. This is the memory address that we will 
-        // be reading/writing from/to.
-        // Notice that the read is word-aligned
-        if (const auto r = writeAP(0x4, addr & 0xfffffffc); r != 0) {
-            return std::unexpected(r);
-        }
-        // Read from the AP DRW register (actual data is buffered and comes later)
-        if (const auto r = readAP(0xc); !r.has_value()) {
-            return std::unexpected(r.error());
-        }
-        // Fetch result of previous AP read
-        if (const auto r = readDP(0xc); !r.has_value()) {
-            return std::unexpected(r.error());
-        } else {
-            // For the even half-words (i.e. word boundary) just return the 
-            // 16 least-significant bytes
-            if ((addr & 0x3) == 0)
-                return (*r & 0xffff);
-            // For the odd half-words return the 16 most significant bytes.
-            else 
-                return (*r >> 16) & 0xffff;
-        }
-    }
+    std::expected<uint16_t, int> readHalfWordViaAP(uint32_t addr);
 
     /**
      * Polls the S_REGRDY bit of the DHCSR register to find out whether
      * a core register read/write has completed successfully.
      */
-    int pollREGRDY(unsigned int timeoutUs = 0) {
-        while (true) {
-            const auto r = readWordViaAP(ARM_DHCSR);
-            if (!r.has_value())
-                return -1;
-            if (*r & ARM_DHCSR_S_REGRDY)
-                return 0;
-        }
-    }
+    int pollREGRDY(unsigned int timeoutUs = 0);
 
     void setDIO(bool h) { _setDIO(h); }
 
@@ -218,6 +136,11 @@ protected:
     void _holdDIO();
     void _releaseDIO();
     void _delayPeriod();
+
+private:
+
+    unsigned int _clkPin;
+    unsigned int _dioPin;
 };
 
 }

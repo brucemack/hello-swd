@@ -1,3 +1,9 @@
+/**
+ * A demonstration program that flashes some firmware into an RP2040 via 
+ * the SWD port.
+ * 
+ * Copyright (C) Bruce MacKinnon, 2025
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include "pico/stdlib.h"
@@ -237,13 +243,6 @@ std::expected<uint32_t, int> call_function(SWD& swd,
     if (const auto r = swd.writeWordViaAP(0xE000ED30, dfsr); r != 0)
         return std::unexpected(-13);
 
-    //printf("\n----- Before Resume -----\n");
-    //display_status(swd);
-
-    // Single step
-    //if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b101 | 0b1000); r != 0)
-    //    return std::unexpected(-13);
-
     // Remove halt, keep MASKINT and DEBUGEN.  We should run until the BKPT #0 instruction
     if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b001 | 0b1000); r != 0)
         return std::unexpected(-13);
@@ -257,9 +256,6 @@ std::expected<uint32_t, int> call_function(SWD& swd,
                 break;
         }
     }
-
-    //printf("\n----- After Resume -----\n");
-    //display_status(swd);
 
     // Read back from the r0 register
     // [16] is 0 (read), [6:0] 0b0000000 means r0
@@ -347,20 +343,6 @@ int flash_and_verify(SWD& swd) {
         tab_ptr += 4;
     }
 
-    // Load a small test program that sets r0 and returns.  Note the starting
-    // location
-    //
-    // MOV r0, #8
-    // # Return 
-    // bx lr
-    if (const auto r = swd.writeWordViaAP(0x20000010, 0x47702008); r != 0)
-        return -1;
-    //
-    // MOV r0, #8
-    // BKPR #0
-    //if (const auto r = swd.writeWordViaAP(0x20000010, 0xbe002008); r != 0)
-    //   return -1;
-
     // Take size of binary and pad it up to a 4K boundary
     unsigned int page_size = 4096;
     unsigned int whole_pages = blinky_bin_len / page_size;
@@ -380,6 +362,8 @@ int flash_and_verify(SWD& swd) {
     printf("Programing %u bytes ...\n", buf_len);
     if (const auto r = swd.writeMultiWordViaAP(ram_workarea, (const uint32_t*)buf, buf_len / 4); r != 0)
         return -1;
+
+    free(buf);
 
     // These are the functions that need to be called:
     //
@@ -446,6 +430,108 @@ int flash_and_verify(SWD& swd) {
     return 0;
 }
 
+int prog_1() {
+
+    SWD swd(CLK_PIN, DIO_PIN);
+
+    swd.init();
+    if (swd.connect()) 
+        return -1;
+   
+    // DP SELECT - Set AP bank F, DP bank 0
+    // [31:24] AP Select
+    // [7:4]   AP Bank Select (the active four-word bank)
+    if (const auto r = swd.writeDP(0b1000, 0x000000f0); r != 0)
+        return -2;
+
+    // Read AP addr 0xFC. [7:4] bank address set previously, [3:0] set here.
+    // 0xFC is the AP identification register.
+    // The actual data comes back during the DP RDBUFF read
+    if (const auto r = swd.readAP(0x0c); !r.has_value())
+        return -3;
+    // DP RDBUFF - Read AP result
+    if (const auto r = swd.readDP(0x0c); !r.has_value()) {
+        return -4;
+    } else {
+        printf("AP ID %X\n", *r);
+    }
+
+    // Leave the debug system in the proper state (post-reset)
+
+    // DP SELECT - Set AP and DP bank 0
+    if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0)
+        return -5;
+
+    // Write to the AP Control/Status Word (CSW), auto-increment, word values
+    //
+    // 1010_0010_0000_0000_0001_0010
+    // 
+    // [5:4] 01  : Auto Increment set to "Increment Single," which increments by the size of the access.
+    // [2:0] 010 : Size of the access to perform, which is 32 bits in this case. 
+    if (const auto r = swd.writeAP(0b0000, 0x22000012); r != 0)
+        return -6;
+
+    // ----- RESET ------------------------------------------------------------
+
+    // Enable debug mode and halt
+    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b1011); r != 0) 
+        return -7;
+
+    // Set DEMCR.VC_CORERESET=1 so that we come up in debug mode after reset
+    // (i.e. vector catch)
+    if (const auto r = swd.writeWordViaAP(0xE000EDFC, 0x00000001); r != 0)
+        return -8;
+
+    // Trigger a reset by writing SYSRESETREQ to NVIC.AIRCR.
+    if (const auto r = swd.writeWordViaAP(0xe000ed0c, 0x05fa0004); r != 0)
+        return -9;
+
+    // ???
+    // TODO: Figure out what to poll for to avoid this race condition
+    sleep_ms(10);
+    
+    // DP SELECT - Set AP and DP bank 0
+    if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0) 
+        return -10;
+
+    // Write to the AP Control/Status Word (CSW), auto-increment, word values
+    //
+    // 1010_0010_0000_0000_0001_0010
+    // 
+    // [5:4] 01  : Auto Increment set to "Increment Single," which increments by the size of the access.
+    // [2:0] 010 : Size of the access to perform, which is 32 bits in this case. 
+    if (const auto r = swd.writeAP(0b0000, 0x22000012); r != 0)
+        return -11;
+
+    // Move VTOR to SRAM
+    if (const auto r = swd.writeWordViaAP(0xe000ed08, 0x20000000); r != 0)
+        return -12;
+
+    // Here's where the actual flash happens
+    if (const int rc = flash_and_verify(swd); rc != 0) {
+        printf("Flashed failed\n");
+        return -100 + rc;
+    }
+
+    // Finalize any last writes
+    swd.writeBitPattern("00000000");
+
+    // Leave debug
+    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000); r != 0) 
+        return -14;
+
+    // Trigger a reset by writing SYSRESETREQ to NVIC.AIRCR.
+    printf("Resetting ...\n");
+
+    if (const auto r = swd.writeWordViaAP(0xe000ed0c, 0x05fa0004); r != 0) 
+        return -15;
+
+    // Finalize any last writes
+    swd.writeBitPattern("00000000");
+
+    return 0;
+}
+
 int main(int, const char**) {
 
     stdio_init_all();
@@ -465,104 +551,14 @@ int main(int, const char**) {
     gpio_put(LED_PIN, 0);
     sleep_ms(500);
 
-    printf("Start 2\n");
+    printf("Flash Programming Demonstration 1\n");
 
-    SWD swd;
+    int rc = prog_1();
+    if (rc != 0)
+        printf("Programming failed\n");
+    else 
+        printf("Programming succeeded\n");
 
-    swd.init();
-    if (swd.connect()) 
-        return -1;
-   
-    // DP SELECT - Set AP bank F, DP bank 0
-    // [31:24] AP Select
-    // [7:4]   AP Bank Select (the active four-word bank)
-    if (const auto r = swd.writeDP(0b1000, 0x000000f0); r != 0)
-        return -1;
-
-    // Read AP addr 0xFC. [7:4] bank address set previously, [3:0] set here.
-    // 0xFC is the AP identification register.
-    // The actual data comes back during the DP RDBUFF read
-    if (const auto r = swd.readAP(0x0c); !r.has_value())
-        return -1;
-
-    // DP RDBUFF - Read AP result
-    if (const auto r = swd.readDP(0xc); !r.has_value()) {
-        return -1;
-    } else {
-        printf("AP ID %X\n", *r);
-
-    }
-
-    // Leave the debug system in the proper state (post-reset)
-
-    // DP SELECT - Set AP and DP bank 0
-    if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0)
-        return -1;
-
-    // Write to the AP Control/Status Word (CSW), auto-increment, word values
-    //
-    // 1010_0010_0000_0000_0001_0010
-    // 
-    // [5:4] 01  : Auto Increment set to "Increment Single," which increments by the size of the access.
-    // [2:0] 010 : Size of the access to perform, which is 32 bits in this case. 
-    if (const auto r = swd.writeAP(0b0000, 0x22000012); r != 0)
-        return -1;
-
-    // ----- RESET ------------------------------------------------------------
-
-    // Enable debug mode and halt
-    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b1011); r != 0) 
-        return -1;
-
-    // Set DEMCR.VC_CORERESET=1 so that we come up in debug mode after reset
-    // (i.e. vector catch)
-    if (const auto r = swd.writeWordViaAP(0xE000EDFC, 0x00000001); r != 0)
-        return -1;
-
-    // Trigger a reset by writing SYSRESETREQ to NVIC.AIRCR.
-    if (const auto r = swd.writeWordViaAP(0xe000ed0c, 0x05fa0004); r != 0)
-        return -1;
-
-    // ???
-    // TODO: Figure out what to poll for to avoid this race condition
-    sleep_ms(10);
-    
-    // DP SELECT - Set AP and DP bank 0
-    if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0) 
-        return -1;
-
-    // Write to the AP Control/Status Word (CSW), auto-increment, word values
-    //
-    // 1010_0010_0000_0000_0001_0010
-    // 
-    // [5:4] 01  : Auto Increment set to "Increment Single," which increments by the size of the access.
-    // [2:0] 010 : Size of the access to perform, which is 32 bits in this case. 
-    if (const auto r = swd.writeAP(0b0000, 0x22000012); r != 0)
-        return -1;
-
-    // Move VTOR to SRAM
-    if (const auto r = swd.writeWordViaAP(0xe000ed08, 0x20000000); r != 0)
-        return -1;
-
-    // Here's where the actual flash happens
-    if (flash_and_verify(swd) != 0) {
-        printf("Flashed failed\n");
-        return -1;
-    }
-
-    // Leave debug
-    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000); r != 0) 
-        return -1;
-
-    // Trigger a reset by writing SYSRESETREQ to NVIC.AIRCR.
-    printf("Resetting ...\n");
-
-    if (const auto r = swd.writeWordViaAP(0xe000ed0c, 0x05fa0004); r != 0) 
-        return -1;
-
-    // Finalize any last writes
-    swd.writeBitPattern("00000000");
-    
     while (true) {        
     }
 }

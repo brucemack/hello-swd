@@ -10,22 +10,21 @@ static const char* SELECTION_ALERT = "0100_1001_1100_1111_1001_0000_0100_0110_10
 
 static const char* ACTIVATION_CODE = "0000_0101_1000_1111";
 
-// This is supposed to be AEEE_EEE6 (MSB first), but only the last 30 bits are used
-//static const char* JTAG_TO_DS_CONVERSION = "1010_1110_1110_1110_1110_1110_1110_0110";
-
-
-#define CLK_PIN (2)
-#define DIO_PIN (3)
-
 #define DAP_ADDR_CORE0 (0x01002927)
 
-void SWD::init() {
-    gpio_set_dir(CLK_PIN, GPIO_OUT);        
-    gpio_put(CLK_PIN, 0);
+SWD::SWD(unsigned int clock_pin, unsigned int dio_pin) {
+    _clkPin = clock_pin;
+    _dioPin = dio_pin;
+}
 
-    gpio_set_dir(DIO_PIN, GPIO_OUT);        
-    gpio_put(DIO_PIN, 0);
-    gpio_set_pulls(DIO_PIN, false, false);        
+void SWD::init() {
+
+    gpio_set_dir(_clkPin, GPIO_OUT);        
+    gpio_put(_clkPin, 0);
+
+    gpio_set_dir(_dioPin, GPIO_OUT);        
+    gpio_put(_dioPin, 0);
+    gpio_set_pulls(_dioPin, false, false);        
 }
 
 int SWD::connect() {   
@@ -34,7 +33,7 @@ int SWD::connect() {
     writeBitPattern("11111111");
 
     // For ease of tracing
-    sleep_us(1);
+    _delayPeriod();
 
     // From "Low Pin-count Debug Interfaces for Multi-device Systems"
     // by Michael Williams
@@ -73,7 +72,7 @@ int SWD::connect() {
     writeBitPattern("00000000");
 
     // For ease of tracing
-    sleep_us(1);
+    _delayPeriod();
 
     // DP TARGETSEL, DP for Core 0.  We ignore the ACK here!
     // At this point there are multiple cores listening on the 
@@ -137,25 +136,158 @@ int SWD::connect() {
     }
 }
 
+    /**
+     * Writes a 32-bit word into the processor memory space via the MEM-AP
+     * mechanism.  This involves seting the AP TAR register first and then 
+     * writing to the AP DRW register.
+     * 
+     * @param addr The processor address
+     * @param data The data to write
+     * @returns 0 on success.
+     * 
+     * IMPORTANT: This function assumes that the appropriate AP
+     * and AP register bank 0 have already been selected via a 
+     * previous DP SELECT call.  This function does not do those
+     * steps in order to save time.
+     * 
+     * IMPORTANT: This function assumes that the CSW has been 
+     * configured for a 4-byte transfer.
+     */
+    int SWD::writeWordViaAP(uint32_t addr, uint32_t data) {
+        // Write to the AP TAR register. This is the memory address that we will 
+        // be reading/writing from/to.
+        if (const auto r = writeAP(0x4, addr); r != 0)
+            return r;
+        // Write to the AP DRW register
+        if (const auto r = writeAP(0xc, data); r != 0)
+            return r;
+        return 0;
+    }
+
+
+   /** 
+     * IMPORTANT: This function assumes that the CSW has been 
+     * configured for a 4-byte transfer and for auto-increment.
+     * 
+     * NOTE: Refer to the ARM IHI 0031A document in section 8.2.2.
+     * "Automatic address increment is only guaranteed to operate 
+     * on the bottom 10-bits of the address held in the TAR."
+     */
+   int SWD::writeMultiWordViaAP(uint32_t start_addr, const uint32_t* data, 
+        unsigned int word_count) {
+        
+        uint32_t addr = start_addr, last_tar_addr = 0;
+        const uint32_t TEN_BITS = 0b1111111111;
+
+        for (unsigned int i = 0; i < word_count; i++) {
+
+            if (i == 0 || (addr & TEN_BITS) != (last_tar_addr & TEN_BITS)) {
+                // Write to the AP TAR register. This is the starting memory 
+                // address that we will be reading/writing from/to. Since
+                // auto-increment is enabled this only needs to happen when 
+                // we cross the 10-bit boundaries
+                if (const auto r = writeAP(0x4, addr); r != 0)
+                    return r;
+                last_tar_addr = addr;
+            }
+
+            // Write to the AP DRW register
+            if (const auto r = writeAP(0xc, *(data + i)); r != 0)
+                return r;
+
+            addr += 4;
+        }
+
+        return 0;
+    }
+
+    /**
+     * IMPORTANT: This function assumes that the appropriate AP
+     * and AP register bank 0 have already been selected via a 
+     * previous DP SELECT call.  This function does not do those
+     * steps in order to save time.
+     * 
+     * IMPORTANT: This function assumes that the CSW has been 
+     * configured for a 4-byte transfer.
+     */
+    std::expected<uint32_t, int> SWD::readWordViaAP(uint32_t addr) {
+
+        // Write to the AP TAR register. This is the memory address that we will 
+        // be reading/writing from/to.
+        if (const auto r = writeAP(0x4, addr); r != 0) {
+            return std::unexpected(r);
+        }
+        // Read from the AP DRW register (actual data is buffered and comes later)
+        if (const auto r = readAP(0xc); !r.has_value()) {
+            return std::unexpected(r.error());
+        }
+        // Fetch result of previous AP read
+        if (const auto r = readDP(0xc); !r.has_value()) {
+            return std::unexpected(r.error());
+        } else {
+            return *r;
+        }
+    }
+
+std::expected<uint16_t, int> SWD::readHalfWordViaAP(uint32_t addr) {
+
+    // Write to the AP TAR register. This is the memory address that we will 
+    // be reading/writing from/to.
+    // Notice that the read is word-aligned
+    if (const auto r = writeAP(0x4, addr & 0xfffffffc); r != 0) {
+        return std::unexpected(r);
+    }
+    // Read from the AP DRW register (actual data is buffered and comes later)
+    if (const auto r = readAP(0xc); !r.has_value()) {
+        return std::unexpected(r.error());
+    }
+    // Fetch result of previous AP read
+    if (const auto r = readDP(0xc); !r.has_value()) {
+        return std::unexpected(r.error());
+    } else {
+        // For the even half-words (i.e. word boundary) just return the 
+        // 16 least-significant bytes
+        if ((addr & 0x3) == 0)
+            return (*r & 0xffff);
+        // For the odd half-words return the 16 most significant bytes.
+        else 
+           return (*r >> 16) & 0xffff;
+    }
+}
+
+/**
+ * Polls the S_REGRDY bit of the DHCSR register to find out whether
+ * a core register read/write has completed successfully.
+ */
+int SWD::pollREGRDY(unsigned int timeoutUs) {
+    while (true) {
+        const auto r = readWordViaAP(ARM_DHCSR);
+        if (!r.has_value())
+            return -1;
+        if (*r & ARM_DHCSR_S_REGRDY)
+            return 0;
+    }
+}
+
 void SWD::_setCLK(bool h) {
-    gpio_put(CLK_PIN, h ? 1 : 0);
+    gpio_put(_clkPin, h ? 1 : 0);
 }
 
 void SWD::_setDIO(bool h) {
-    gpio_put(DIO_PIN, h ? 1 : 0);    
+    gpio_put(_dioPin, h ? 1 : 0);    
 }
 
 bool SWD::_getDIO() {
-    return gpio_get(DIO_PIN) == 1;
+    return gpio_get(_dioPin) == 1;
 }
 
 void SWD::_holdDIO() {
-    gpio_set_dir(DIO_PIN, GPIO_OUT);                
+    gpio_set_dir(_dioPin, GPIO_OUT);                
 }
 
 void SWD::_releaseDIO() {
-    gpio_set_pulls(DIO_PIN, false, false);        
-    gpio_set_dir(DIO_PIN, GPIO_IN);                
+    gpio_set_pulls(_dioPin, false, false);        
+    gpio_set_dir(_dioPin, GPIO_IN);                
 }
 
 std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
@@ -203,7 +335,6 @@ std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
     if (readBit()) ack |= 1;
     if (readBit()) ack |= 2;
     if (readBit()) ack |= 4;
-
 
     // 0b001 is OK
     if (ack != 0b001) {
@@ -361,10 +492,6 @@ void SWD::writeSelectionAlert() {
 void SWD::writeActivationCode() {
     writeBitPattern(ACTIVATION_CODE);
 }
-
-//void SWD::writeJTAGToDSConversion() {
-//    writeBitPattern(JTAG_TO_DS_CONVERSION);
-//}
 
 void SWD::_delayPeriod() {
     sleep_us(1);
