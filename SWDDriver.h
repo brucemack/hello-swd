@@ -1,5 +1,5 @@
-#ifndef _SWD_h
-#define _SWD_h
+#ifndef _SWDDriver_h
+#define _SWDDriver_h
 
 #include <cstdint>
 #include <expected>
@@ -11,11 +11,11 @@
 
 namespace kc1fsz {
 
-class SWD {
+class SWDDriver {
 
 public:
 
-    SWD(unsigned int clock_pin, unsigned int dio_pin);
+    SWDDriver(unsigned int clock_pin, unsigned int dio_pin);
 
     void init();
 
@@ -141,6 +141,7 @@ private:
 
     unsigned int _clkPin;
     unsigned int _dioPin;
+    uint32_t _apId;
 };
 
 }

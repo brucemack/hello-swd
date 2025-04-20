@@ -13,7 +13,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0")
 
 add_executable(main
   main.cpp
-  SWD.cpp
+  SWDDriver.cpp
 )
 
 pico_enable_stdio_usb(main 1)
@@ -21,7 +21,7 @@ target_link_libraries(main pico_stdlib hardware_i2c)
 
 add_executable(prog-1
   prog-1.cpp
-  SWD.cpp
+  SWDDriver.cpp
 )
 
 pico_enable_stdio_usb(prog-1 1)

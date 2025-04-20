@@ -14,7 +14,7 @@
 #include "hardware/i2c.h"
 
 #include "blinky-bin.h"
-#include "SWD.h"
+#include "SWDDriver.h"
 
 using namespace kc1fsz;
 
@@ -27,7 +27,7 @@ static uint32_t rom_table_code(char c1, char c2) {
   return (c2 << 8) | c1;
 }
 
-void display_status(SWD& swd) {
+void display_status(SWDDriver& swd) {
 
     uint32_t pc = 0;
     if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x0000000f); r != 0)
@@ -156,7 +156,7 @@ void display_status(SWD& swd) {
  * when this function is called.  On exit, this target will still be 
  * in debug/halt mode.
  */
-std::expected<uint32_t, int> call_function(SWD& swd, 
+std::expected<uint32_t, int> call_function(SWDDriver& swd, 
     uint32_t trampoline_addr, uint32_t func_addr, 
     uint32_t a0, uint32_t a1, uint32_t a2, uint32_t a3) {
 
@@ -271,7 +271,7 @@ std::expected<uint32_t, int> call_function(SWD& swd,
     }
 }
 
-int flash_and_verify(SWD& swd) {
+int flash_and_verify(SWDDriver& swd) {
 
     // DP SELECT - Set AP and DP bank 0
     if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0)
@@ -432,45 +432,12 @@ int flash_and_verify(SWD& swd) {
 
 int prog_1() {
 
-    SWD swd(CLK_PIN, DIO_PIN);
+    SWDDriver swd(CLK_PIN, DIO_PIN);
 
     swd.init();
     if (swd.connect()) 
         return -1;
    
-    // DP SELECT - Set AP bank F, DP bank 0
-    // [31:24] AP Select
-    // [7:4]   AP Bank Select (the active four-word bank)
-    if (const auto r = swd.writeDP(0b1000, 0x000000f0); r != 0)
-        return -2;
-
-    // Read AP addr 0xFC. [7:4] bank address set previously, [3:0] set here.
-    // 0xFC is the AP identification register.
-    // The actual data comes back during the DP RDBUFF read
-    if (const auto r = swd.readAP(0x0c); !r.has_value())
-        return -3;
-    // DP RDBUFF - Read AP result
-    if (const auto r = swd.readDP(0x0c); !r.has_value()) {
-        return -4;
-    } else {
-        printf("AP ID %X\n", *r);
-    }
-
-    // Leave the debug system in the proper state (post-reset)
-
-    // DP SELECT - Set AP and DP bank 0
-    if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0)
-        return -5;
-
-    // Write to the AP Control/Status Word (CSW), auto-increment, word values
-    //
-    // 1010_0010_0000_0000_0001_0010
-    // 
-    // [5:4] 01  : Auto Increment set to "Increment Single," which increments by the size of the access.
-    // [2:0] 010 : Size of the access to perform, which is 32 bits in this case. 
-    if (const auto r = swd.writeAP(0b0000, 0x22000012); r != 0)
-        return -6;
-
     // ----- RESET ------------------------------------------------------------
 
     // Enable debug mode and halt
@@ -512,6 +479,11 @@ int prog_1() {
         printf("Flashed failed\n");
         return -100 + rc;
     }
+
+    // Clear DEMCR.VC_CORERESET so that we don't enter debug mode
+    // on the next reset
+    if (const auto r = swd.writeWordViaAP(0xE000EDFC, 0x00000000); r != 0)
+        return -13;
 
     // Finalize any last writes
     swd.writeBitPattern("00000000");

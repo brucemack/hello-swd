@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "SWD.h"
+#include "SWDDriver.h"
 #include "hardware/gpio.h"
 #include "pico/time.h"
 
@@ -12,12 +12,12 @@ static const char* ACTIVATION_CODE = "0000_0101_1000_1111";
 
 #define DAP_ADDR_CORE0 (0x01002927)
 
-SWD::SWD(unsigned int clock_pin, unsigned int dio_pin) {
+SWDDriver::SWDDriver(unsigned int clock_pin, unsigned int dio_pin) {
     _clkPin = clock_pin;
     _dioPin = dio_pin;
 }
 
-void SWD::init() {
+void SWDDriver::init() {
 
     gpio_set_dir(_clkPin, GPIO_OUT);        
     gpio_put(_clkPin, 0);
@@ -27,7 +27,7 @@ void SWD::init() {
     gpio_set_pulls(_dioPin, false, false);        
 }
 
-int SWD::connect() {   
+int SWDDriver::connect() {   
 
     setDIO(false);
     writeBitPattern("11111111");
@@ -107,63 +107,99 @@ int SWD::connect() {
     }
     else {
         printf("IDCODE ERROR %d\n", r.error());
-        return -1;
+        return -2;
     }
 
     // Abort (in case anything is in process)
     if (const auto r = writeDP(0b0000, 0x0000001e); r != 0)
-        return -1;
+        return -3;
 
     // Set AP and DP bank 0
     if (const auto r = writeDP(0b1000, 0x00000000); r != 0)
-        return -1;
+        return -4;
 
     // Power up
     if (const auto r = writeDP(0b0100, 0x50000001); r != 0)
-        return -1;
+        return -5;
 
     // TODO: POLLING FOR POWER UP NEEDED?
 
     // Read DP CTRLSEL and check for CSYSPWRUPACK and CDBGPWRUPACK
     if (const auto r = readDP(0b0100); !r.has_value()) {
-        return -1;
+        return -6;
     } else {
         // TODO: MAKE SURE THIS STILL WORKS
         if ((*r & 0x80000000) && (*r & 0x20000000))
             return 0;
         else
-            return -2;
+            return -7;
     }
+
+    // DP SELECT - Set AP bank F, DP bank 0
+    // [31:24] AP Select
+    // [7:4]   AP Bank Select (the active four-word bank)
+    if (const auto r = writeDP(0b1000, 0x000000f0); r != 0)
+        return -8;
+
+    // Read AP addr 0xFC. [7:4] bank address set previously, [3:0] set here.
+    // 0xFC is the AP identification register.
+    // The actual data comes back during the DP RDBUFF read
+    if (const auto r = readAP(0x0c); !r.has_value())
+        return -9;
+    // DP RDBUFF - Read AP result
+    if (const auto r = readDP(0x0c); !r.has_value()) {
+        return -10;
+    } else {
+        _apId = *r;
+    }
+
+    // Leave the debug system in the proper state (post-connect)
+
+    // DP SELECT - Set AP and DP bank 0
+    if (const auto r = writeDP(0x8, 0x00000000); r != 0)
+        return -11;
+
+    // Write to the AP Control/Status Word (CSW), auto-increment, 32-bit 
+    // transfer size.
+    //
+    // 1010_0010_0000_0000_0001_0010
+    // 
+    // [5:4] 01  : Auto Increment set to "Increment Single," which increments by the size of the access.
+    // [2:0] 010 : Size of the access to perform, which is 32 bits in this case. 
+    //
+    if (const auto r = writeAP(0b0000, 0x22000012); r != 0)
+        return -12;
+
+    return 0;
 }
 
-    /**
-     * Writes a 32-bit word into the processor memory space via the MEM-AP
-     * mechanism.  This involves seting the AP TAR register first and then 
-     * writing to the AP DRW register.
-     * 
-     * @param addr The processor address
-     * @param data The data to write
-     * @returns 0 on success.
-     * 
-     * IMPORTANT: This function assumes that the appropriate AP
-     * and AP register bank 0 have already been selected via a 
-     * previous DP SELECT call.  This function does not do those
-     * steps in order to save time.
-     * 
-     * IMPORTANT: This function assumes that the CSW has been 
-     * configured for a 4-byte transfer.
-     */
-    int SWD::writeWordViaAP(uint32_t addr, uint32_t data) {
-        // Write to the AP TAR register. This is the memory address that we will 
-        // be reading/writing from/to.
-        if (const auto r = writeAP(0x4, addr); r != 0)
-            return r;
-        // Write to the AP DRW register
-        if (const auto r = writeAP(0xc, data); r != 0)
-            return r;
-        return 0;
-    }
-
+/**
+ * Writes a 32-bit word into the processor memory space via the MEM-AP
+ * mechanism.  This involves seting the AP TAR register first and then 
+ * writing to the AP DRW register.
+ * 
+ * @param addr The processor address
+ * @param data The data to write
+ * @returns 0 on success.
+ * 
+ * IMPORTANT: This function assumes that the appropriate AP
+ * and AP register bank 0 have already been selected via a 
+ * previous DP SELECT call.  This function does not do those
+ * steps in order to save time.
+ * 
+ * IMPORTANT: This function assumes that the CSW has been 
+ * configured for a 4-byte transfer.
+ */
+int SWDDriver::writeWordViaAP(uint32_t addr, uint32_t data) {
+    // Write to the AP TAR register. This is the memory address that we will 
+    // be reading/writing from/to.
+    if (const auto r = writeAP(0x4, addr); r != 0)
+        return r;
+    // Write to the AP DRW register
+    if (const auto r = writeAP(0xc, data); r != 0)
+        return r;
+    return 0;
+}
 
    /** 
      * IMPORTANT: This function assumes that the CSW has been 
@@ -173,7 +209,7 @@ int SWD::connect() {
      * "Automatic address increment is only guaranteed to operate 
      * on the bottom 10-bits of the address held in the TAR."
      */
-   int SWD::writeMultiWordViaAP(uint32_t start_addr, const uint32_t* data, 
+   int SWDDriver::writeMultiWordViaAP(uint32_t start_addr, const uint32_t* data, 
         unsigned int word_count) {
         
         uint32_t addr = start_addr, last_tar_addr = 0;
@@ -210,7 +246,7 @@ int SWD::connect() {
      * IMPORTANT: This function assumes that the CSW has been 
      * configured for a 4-byte transfer.
      */
-    std::expected<uint32_t, int> SWD::readWordViaAP(uint32_t addr) {
+    std::expected<uint32_t, int> SWDDriver::readWordViaAP(uint32_t addr) {
 
         // Write to the AP TAR register. This is the memory address that we will 
         // be reading/writing from/to.
@@ -229,7 +265,7 @@ int SWD::connect() {
         }
     }
 
-std::expected<uint16_t, int> SWD::readHalfWordViaAP(uint32_t addr) {
+std::expected<uint16_t, int> SWDDriver::readHalfWordViaAP(uint32_t addr) {
 
     // Write to the AP TAR register. This is the memory address that we will 
     // be reading/writing from/to.
@@ -259,7 +295,7 @@ std::expected<uint16_t, int> SWD::readHalfWordViaAP(uint32_t addr) {
  * Polls the S_REGRDY bit of the DHCSR register to find out whether
  * a core register read/write has completed successfully.
  */
-int SWD::pollREGRDY(unsigned int timeoutUs) {
+int SWDDriver::pollREGRDY(unsigned int timeoutUs) {
     while (true) {
         const auto r = readWordViaAP(ARM_DHCSR);
         if (!r.has_value())
@@ -269,28 +305,28 @@ int SWD::pollREGRDY(unsigned int timeoutUs) {
     }
 }
 
-void SWD::_setCLK(bool h) {
+void SWDDriver::_setCLK(bool h) {
     gpio_put(_clkPin, h ? 1 : 0);
 }
 
-void SWD::_setDIO(bool h) {
+void SWDDriver::_setDIO(bool h) {
     gpio_put(_dioPin, h ? 1 : 0);    
 }
 
-bool SWD::_getDIO() {
+bool SWDDriver::_getDIO() {
     return gpio_get(_dioPin) == 1;
 }
 
-void SWD::_holdDIO() {
+void SWDDriver::_holdDIO() {
     gpio_set_dir(_dioPin, GPIO_OUT);                
 }
 
-void SWD::_releaseDIO() {
+void SWDDriver::_releaseDIO() {
     gpio_set_pulls(_dioPin, false, false);        
     gpio_set_dir(_dioPin, GPIO_IN);                
 }
 
-std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
+std::expected<uint32_t, int> SWDDriver::_read(bool isAP, uint8_t addr) {
 
     // The only variable bits are the address and the DP/AP flag
     unsigned int ones = 0;
@@ -372,7 +408,7 @@ std::expected<uint32_t, int> SWD::_read(bool isAP, uint8_t addr) {
 }
 
 
-int SWD::_write(bool isAP, uint8_t addr, uint32_t data, bool ignoreAck) {
+int SWDDriver::_write(bool isAP, uint8_t addr, uint32_t data, bool ignoreAck) {
 
     // The only variable bits are the address and the DP/AP flag
     unsigned int ones = 0;
@@ -447,7 +483,7 @@ int SWD::_write(bool isAP, uint8_t addr, uint32_t data, bool ignoreAck) {
     return 0;
 }
 
-void SWD::writeBit(bool b) {
+void SWDDriver::writeBit(bool b) {
     // Setup the outbound data
     _setDIO(b);
     _delayPeriod();
@@ -457,7 +493,7 @@ void SWD::writeBit(bool b) {
     _setCLK(false);
 }
 
-bool SWD::readBit() {
+bool SWDDriver::readBit() {
     // NOTE: This makes it look like the data is already setup by the previous
     // falling clock edge?
     _delayPeriod();
@@ -468,7 +504,7 @@ bool SWD::readBit() {
     return r;
 }
 
-void SWD::writeBitPattern(const char* pattern) {
+void SWDDriver::writeBitPattern(const char* pattern) {
     const char* b = pattern;
     while (*b != 0) {
         if (*b == '0') {
@@ -480,20 +516,20 @@ void SWD::writeBitPattern(const char* pattern) {
     }
 }
 
-void SWD::writeLineReset() {
+void SWDDriver::writeLineReset() {
     for (unsigned int i = 0; i < 64; i++)
         writeBit(true);
 }
 
-void SWD::writeSelectionAlert() {
+void SWDDriver::writeSelectionAlert() {
     writeBitPattern(SELECTION_ALERT);
 }
 
-void SWD::writeActivationCode() {
+void SWDDriver::writeActivationCode() {
     writeBitPattern(ACTIVATION_CODE);
 }
 
-void SWD::_delayPeriod() {
+void SWDDriver::_delayPeriod() {
     sleep_us(1);
 }
 
