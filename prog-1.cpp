@@ -344,7 +344,7 @@ int flash_and_verify(SWDDriver& swd) {
     }
 
     // Take size of binary and pad it up to a 4K boundary
-    unsigned int page_size = 4096;
+    const unsigned int page_size = 4096;
     unsigned int whole_pages = blinky_bin_len / page_size;
     unsigned int remainder = blinky_bin_len % page_size;
     // Make sure we are using full pages
@@ -353,78 +353,84 @@ int flash_and_verify(SWDDriver& swd) {
     // Make a zero buffer large enough and copy in the code
     unsigned int buf_len = whole_pages * page_size;
     unsigned int buf_words = buf_len / 4;
-    void* buf = malloc(buf_len); 
+    uint8_t* buf = (uint8_t*)malloc(buf_len); 
     memset(buf, 0, buf_len);
     memcpy(buf, blinky_bin, blinky_bin_len);
 
-    // Copy the entire program into RAM (max 4x64k)
     const unsigned int ram_workarea = 0x20000100;     
     printf("Programing %u bytes ...\n", buf_len);
-    if (const auto r = swd.writeMultiWordViaAP(ram_workarea, (const uint32_t*)buf, buf_len / 4); r != 0)
-        return -1;
 
-    free(buf);
-
-    // These are the functions that need to be called:
-    //
-    // 0. connect_internal_flash();
-    // 1. flash_exit_xip();
-    // 2. flash_range_erase(0, ram_len_in_bytes, 4096, 0xd8);
-    // 3. flash_flush_cache();
-    // 4. connect_internal_flash();
-    // 5. flash_exit_xip();
-    // 6. flash_range_program(0, ram_ptr, ram_len_in_bytes);
-    // 7. flash_flush_cache();
-    // 8. flash_enter_cmd_xip();
-
+    // Get the flash into serial write mode
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_connect_internal_flash_func, 0, 0, 0, 0); !r.has_value())
         return -1;
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_exit_xip_func, 0, 0, 0, 0); !r.has_value())
         return -1;
+
+    // Erase everything using the largest block size possible
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_range_erase_func, 0, buf_len, 1 << 16, 0xd8); !r.has_value())
         return -1;
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_flush_cache_func, 0, 0, 0, 0); !r.has_value())
         return -1;
 
-    if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_connect_internal_flash_func, 0, 0, 0, 0); !r.has_value())
-        return -1;
-    if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_exit_xip_func, 0, 0, 0, 0); !r.has_value())
-        return -1;
-    if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_range_program_func, 0, ram_workarea, buf_len, 0); !r.has_value())
-        return -1;
-    if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_flush_cache_func, 0, 0, 0, 0); !r.has_value())
-        return -1;
+    // Process each page individually
+    for (unsigned int page = 0; page < whole_pages; page++) {
 
+        // TODO: Make a complete page
+
+        // Copy the page into RAM 
+        if (const auto r = swd.writeMultiWordViaAP(ram_workarea, (const uint32_t*)(buf + (page * page_size)), page_size / 4); r != 0)
+            return -1;
+        
+        // Flash the page from RAM -> FLASH
+        if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_range_program_func, 
+            page * page_size, ram_workarea, page_size, 0); !r.has_value())
+            return -1;
+        if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_flush_cache_func, 0, 0, 0, 0); !r.has_value())
+            return -1;
+    }
+
+    // Get back into normal flash reading mode
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_enter_cmd_xip_func, 0, 0, 0, 0); !r.has_value())
         return -1;
 
-    // Verification
     printf("Verifying ...\n");
-    uint32_t ram_ptr = ram_workarea;
-    uint32_t flash_ptr = 0x10000000;
-    
-    for (unsigned int i = 0; i < buf_words; i++) {
 
-        uint32_t ram, flash;
+    // Verify each page individually
+    for (unsigned int page = 0; page < whole_pages; page++) {
 
-        if (const auto r = swd.readWordViaAP(ram_ptr); !r.has_value()) {
+        // TODO: Make a complete page
+
+        // Copy the page into RAM 
+        if (const auto r = swd.writeMultiWordViaAP(ram_workarea, (const uint32_t*)(buf + (page * page_size)), page_size / 4); r != 0)
             return -1;
-        } else {
-            ram = *r;
-        }
-        if (const auto r = swd.readWordViaAP(flash_ptr); !r.has_value()) {
-            return -1;
-        } else {
-            flash = *r;
-        }
+        
+        uint32_t ram_ptr = ram_workarea;
+        uint32_t flash_ptr = 0x10000000 + (page * page_size);
+        
+        for (unsigned int i = 0; i < page_size / 4; i++) {
 
-        if (ram != flash) {
-            printf("Verify failure at word %08X RAM: %08X, FLASH: %08X\n", i, ram, flash);
-            break;
-        }
+            // Compare the RAM word to the FLASH word
+            uint32_t ram, flash;
 
-        ram_ptr += 4;
-        flash_ptr += 4;
+            if (const auto r = swd.readWordViaAP(ram_ptr); !r.has_value()) {
+                return -1;
+            } else {
+                ram = *r;
+            }
+            if (const auto r = swd.readWordViaAP(flash_ptr); !r.has_value()) {
+                return -1;
+            } else {
+                flash = *r;
+            }
+
+            if (ram != flash) {
+                printf("Verify failure at word %08X RAM: %08X, FLASH: %08X\n", i, ram, flash);
+                break;
+            }
+
+            ram_ptr += 4;
+            flash_ptr += 4;
+        }
     }
 
     return 0;
@@ -437,6 +443,8 @@ int prog_1() {
     swd.init();
     if (swd.connect()) 
         return -1;
+
+    printf("Connect is good with APID %08X\n", swd.getAPID());
    
     // ----- RESET ------------------------------------------------------------
 

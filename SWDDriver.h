@@ -25,10 +25,12 @@ public:
      */
     int connect();
 
+    uint32_t getAPID() const { return _apId; }
+
     // NOTE: Slave captures outbound data on the rising edge of the clock
-    void writeBit(bool b);
+    void writeBit(bool b) const;
     // NOTE: Master captures inbound data on the falling edge of the clock
-    bool readBit();
+    bool readBit() const;
 
     // Pattern is made up of "0", "1", and "_" (ignored)
     void writeBitPattern(const char* pattern);
@@ -130,12 +132,12 @@ protected:
     int _write(bool isAP, uint8_t addr, uint32_t data, bool ignoreAck = false);
     std::expected<uint32_t, int> _read(bool isAP, uint8_t addr);
 
-    void _setCLK(bool h);
-    void _setDIO(bool h);
-    bool _getDIO();
+    void _setCLK(bool h) const;
+    void _setDIO(bool h) const;
+    bool _getDIO() const;
     void _holdDIO();
     void _releaseDIO();
-    void _delayPeriod();
+    void _delayPeriod() const;
 
 private:
 

@@ -104,6 +104,7 @@ int SWDDriver::connect() {
     // Read from the ID CODE register
     if (const auto r = readDP(0b0000); r.has_value()) {
         // Good outcome
+        printf("IDCODE is %08X\n", *r);
     }
     else {
         printf("IDCODE ERROR %d\n", r.error());
@@ -118,7 +119,7 @@ int SWDDriver::connect() {
     if (const auto r = writeDP(0b1000, 0x00000000); r != 0)
         return -4;
 
-    // Power up
+    // Power up CSYSPWRUPREQ=1, CDBGPWRUPREQ=1, and ORUNDETECT=1
     if (const auto r = writeDP(0b0100, 0x50000001); r != 0)
         return -5;
 
@@ -135,19 +136,19 @@ int SWDDriver::connect() {
             return -7;
     }
 
-    // DP SELECT - Set AP bank F, DP bank 0
+    // DP SELECT - Set AP bank F, AP 0
     // [31:24] AP Select
     // [7:4]   AP Bank Select (the active four-word bank)
-    if (const auto r = writeDP(0b1000, 0x000000f0); r != 0)
+    if (const auto r = writeDP(0x8, 0x000000f0); r != 0)
         return -8;
 
     // Read AP addr 0xFC. [7:4] bank address set previously, [3:0] set here.
     // 0xFC is the AP identification register.
     // The actual data comes back during the DP RDBUFF read
-    if (const auto r = readAP(0x0c); !r.has_value())
+    if (const auto r = readAP(0xc); !r.has_value())
         return -9;
     // DP RDBUFF - Read AP result
-    if (const auto r = readDP(0x0c); !r.has_value()) {
+    if (const auto r = readDP(0xc); !r.has_value()) {
         return -10;
     } else {
         _apId = *r;
@@ -303,27 +304,6 @@ int SWDDriver::pollREGRDY(unsigned int timeoutUs) {
         if (*r & ARM_DHCSR_S_REGRDY)
             return 0;
     }
-}
-
-void SWDDriver::_setCLK(bool h) {
-    gpio_put(_clkPin, h ? 1 : 0);
-}
-
-void SWDDriver::_setDIO(bool h) {
-    gpio_put(_dioPin, h ? 1 : 0);    
-}
-
-bool SWDDriver::_getDIO() {
-    return gpio_get(_dioPin) == 1;
-}
-
-void SWDDriver::_holdDIO() {
-    gpio_set_dir(_dioPin, GPIO_OUT);                
-}
-
-void SWDDriver::_releaseDIO() {
-    gpio_set_pulls(_dioPin, false, false);        
-    gpio_set_dir(_dioPin, GPIO_IN);                
 }
 
 std::expected<uint32_t, int> SWDDriver::_read(bool isAP, uint8_t addr) {
@@ -483,27 +463,6 @@ int SWDDriver::_write(bool isAP, uint8_t addr, uint32_t data, bool ignoreAck) {
     return 0;
 }
 
-void SWDDriver::writeBit(bool b) {
-    // Setup the outbound data
-    _setDIO(b);
-    _delayPeriod();
-    // Slave will capture the data on this rising edge
-    _setCLK(true);
-    _delayPeriod();
-    _setCLK(false);
-}
-
-bool SWDDriver::readBit() {
-    // NOTE: This makes it look like the data is already setup by the previous
-    // falling clock edge?
-    _delayPeriod();
-    bool r = _getDIO();
-    _setCLK(true);
-    _delayPeriod();
-    _setCLK(false);
-    return r;
-}
-
 void SWDDriver::writeBitPattern(const char* pattern) {
     const char* b = pattern;
     while (*b != 0) {
@@ -529,7 +488,56 @@ void SWDDriver::writeActivationCode() {
     writeBitPattern(ACTIVATION_CODE);
 }
 
-void SWDDriver::_delayPeriod() {
+void SWDDriver::writeBit(bool b) const {
+    // Assert the outbound bit to the slave on the SWDIO data pin
+    _setDIO(b);
+    // Wait about 1uS for setup.
+    _delayPeriod();
+    // Raise the SWLCK clock pin. Slave will capture the data on this rising edge.
+    _setCLK(true);
+    // Wait around 1uS for hold
+    _delayPeriod();
+    // Lower the SWCLK clock pin.
+    _setCLK(false);
+}
+
+bool SWDDriver::readBit() const {
+    // The inbound data is already asserted by the slave on the previous falling 
+    // clock edge.  Wait about 1uS for setup.
+    _delayPeriod();
+    // Read the value from the SWDIO data pin
+    bool r = _getDIO();
+    // Raise the SWCLK clock pin.
+    _setCLK(true);
+    // Wait about 1uS.
+    _delayPeriod();
+    // Lower the SWCLK clock pin.
+    _setCLK(false);
+    return r;
+}
+
+void SWDDriver::_setCLK(bool h) const {
+    gpio_put(_clkPin, h ? 1 : 0);
+}
+
+void SWDDriver::_setDIO(bool h) const {
+    gpio_put(_dioPin, h ? 1 : 0);    
+}
+
+bool SWDDriver::_getDIO() const {
+    return gpio_get(_dioPin) == 1;
+}
+
+void SWDDriver::_holdDIO() {
+    gpio_set_dir(_dioPin, GPIO_OUT);                
+}
+
+void SWDDriver::_releaseDIO() {
+    gpio_set_pulls(_dioPin, false, false);        
+    gpio_set_dir(_dioPin, GPIO_IN);                
+}
+
+void SWDDriver::_delayPeriod() const {
     sleep_us(1);
 }
 
