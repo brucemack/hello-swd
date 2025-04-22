@@ -273,9 +273,14 @@ std::expected<uint32_t, int> call_function(SWDDriver& swd,
 
 int flash_and_verify(SWDDriver& swd) {
 
+    // Move VTOR to SRAM
+    if (const auto r = swd.writeWordViaAP(0xe000ed08, 0x20000000); r != 0)
+        return -12;
+
+    // IS THIS NEEDED?
     // DP SELECT - Set AP and DP bank 0
-    if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0)
-        return -1;
+    //if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0)
+    //    return -1;
 
     // ----- Get the ROM function locations -----------------------------------
 
@@ -465,22 +470,20 @@ int prog_1() {
     // TODO: Figure out what to poll for to avoid this race condition
     sleep_ms(10);
     
+    // IS THIS NEEDED?
     // DP SELECT - Set AP and DP bank 0
-    if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0) 
-        return -10;
+    //if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0) 
+    //    return -10;
 
+    // IS THIS NEEDED?
     // Write to the AP Control/Status Word (CSW), auto-increment, word values
     //
     // 1010_0010_0000_0000_0001_0010
     // 
     // [5:4] 01  : Auto Increment set to "Increment Single," which increments by the size of the access.
     // [2:0] 010 : Size of the access to perform, which is 32 bits in this case. 
-    if (const auto r = swd.writeAP(0b0000, 0x22000012); r != 0)
-        return -11;
-
-    // Move VTOR to SRAM
-    if (const auto r = swd.writeWordViaAP(0xe000ed08, 0x20000000); r != 0)
-        return -12;
+    //if (const auto r = swd.writeAP(0b0000, 0x22000012); r != 0)
+    //    return -11;
 
     // Here's where the actual flash happens
     if (const int rc = flash_and_verify(swd); rc != 0) {
