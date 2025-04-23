@@ -333,19 +333,13 @@ std::expected<uint32_t, int> SWDDriver::_read(bool isAP, uint8_t addr) {
     writeBit((ones % 2) == 1);
     // Stop bit
     writeBit(false);
-
     // Park bit
     writeBit(true);
+
+    // Release the DIO pin so the slave can drive it
     _releaseDIO();
-
-    // IMPORTANT: For ease of display only!
-    _delayPeriod();
-
     // One cycle turnaround 
     readBit();
-
-    // IMPORTANT: For ease of display only!
-    _delayPeriod();
 
     // Read three acknowledgment bits (LSB first)
     uint8_t ack = 0;
@@ -360,9 +354,6 @@ std::expected<uint32_t, int> SWDDriver::_read(bool isAP, uint8_t addr) {
         return std::unexpected(-1);
     }
 
-    // IMPORTANT: For ease of display only!
-    _delayPeriod();
-
     // Read data, LSB first
     uint32_t data = 0;
     ones = 0;
@@ -373,16 +364,14 @@ std::expected<uint32_t, int> SWDDriver::_read(bool isAP, uint8_t addr) {
         data |= (bit) ? 0x80000000 : 0;
     }
 
-    // IMPORTANT: For ease of display only!
-    _delayPeriod();
-
     // Read parity
-    readBit();
+    bool parity = readBit();
+    if (ones % 2 == 1 && !parity)
+        return std::unexpected(-2);
 
-    _delayPeriod();
-
-    // One cycle turnaround 
+    // Grab the DIO pin back again so that we can drive it
     _holdDIO();
+    // One cycle turnaround 
     writeBit(false);
 
     return data;
@@ -399,7 +388,7 @@ int SWDDriver::_write(bool isAP, uint8_t addr, uint32_t data, bool ignoreAck) {
     if (isAP)
         ones++;
 
-    // Start
+    // Start bit
     writeBit(true);
     // 0=DP, 1=AP
     writeBit(isAP);
@@ -411,35 +400,29 @@ int SWDDriver::_write(bool isAP, uint8_t addr, uint32_t data, bool ignoreAck) {
     // This system uses even parity, so an extra one should be 
     // added only if the rest of the count is odd.
     writeBit((ones % 2) == 1);
-    // Stop
+    // Stop bit
     writeBit(false);
-    
-    // Park: drive the DIO high and leave it there
+    // Park bit: drive the DIO high and leave it there
     writeBit(true);
-    _releaseDIO();
 
-    // IMPORTANT: For ease of display/debug only
-    _delayPeriod();
-    
+    // Let go of the DIO pin so that the slave can drive it
+    _releaseDIO();    
     // One cycle turnaround 
     readBit();
 
-    // IMPORTANT: For ease of display/debug only
-    _delayPeriod();
-
-    // Read three bits (LSB first)
+    // Read three acknowledgement bits (LSB first)
     uint8_t ack = 0;
     if (readBit()) ack |= 1;
     if (readBit()) ack |= 2;
     if (readBit()) ack |= 4;
 
-    // One cycle turnaround 
+    // Grab the DIO pin back so that we can drive
     _holdDIO();
+    // One cycle turnaround 
     writeBit(false);
 
     // 001 is OK
     if (!ignoreAck) {
-        //printf("_write() ACK %d\n", ack);
         if (ack != 0b001) {
             return -1;
         }
@@ -453,9 +436,6 @@ int SWDDriver::_write(bool isAP, uint8_t addr, uint32_t data, bool ignoreAck) {
         writeBit(bit);
         data = data >> 1;
     }
-
-    // IMPORTANT: For ease of display/debug only
-    _delayPeriod();
 
     // Write parity in order to make the one count even
     writeBit((ones % 2) == 1);
