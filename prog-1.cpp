@@ -13,7 +13,10 @@
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
 
-#include "blinky-bin.h"
+// NOTE: These relate to the TARGET board, not the flashing board.
+#include "blinky-bin-rp2040.h"
+//#include "blinky-bin-rp2350.h"
+
 #include "SWDDriver.h"
 
 using namespace kc1fsz;

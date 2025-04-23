@@ -17,7 +17,14 @@ into flash and restart.
 The program that is flashed is blinky.cpp.  A few things need to happen
 to prepare this test
 
+* Create the makefile for the correct target:
+
+        cmake -DPICO_BOARD=pico ..
+
 * Build blinky normally to create blinky.elf
+
+        make blinky
+
 * Convert blinky.elf to blinky.bin using:
 
          arm-none-eabi-objcopy -O binary blinky.elf blinky.bin
