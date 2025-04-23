@@ -269,26 +269,29 @@ int SWDDriver::writeWordViaAP(uint32_t addr, uint32_t data) {
 std::expected<uint16_t, int> SWDDriver::readHalfWordViaAP(uint32_t addr) {
 
     // Write to the AP TAR register. This is the memory address that we will 
-    // be reading/writing from/to.
-    // Notice that the read is word-aligned
+    // be reading from. Notice that the read is forced to be word-aligned by 
+    // masking off the bottom two bits.
     if (const auto r = writeAP(0x4, addr & 0xfffffffc); r != 0) {
         return std::unexpected(r);
     }
-    // Read from the AP DRW register (actual data is buffered and comes later)
+    // Read from the AP DRW register (actual data is buffered in the DP and 
+    // comes in the next step)
     if (const auto r = readAP(0xc); !r.has_value()) {
         return std::unexpected(r.error());
     }
-    // Fetch result of previous AP read
+    // Fetch result of previous AP read from the DP READBUF register. Remember, 
+    // this is a full 32-bit word!
     if (const auto r = readDP(0xc); !r.has_value()) {
         return std::unexpected(r.error());
     } else {
         // For the even half-words (i.e. word boundary) just return the 
-        // 16 least-significant bytes
+        // 16 least-significant bits of the word.
         if ((addr & 0x3) == 0)
             return (*r & 0xffff);
-        // For the odd half-words return the 16 most significant bytes.
-        else 
-           return (*r >> 16) & 0xffff;
+        // For the odd half-words return the 16 most significant bits of
+        // of the word.
+        else
+            return (*r >> 16) & 0xffff;
     }
 }
 
