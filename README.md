@@ -31,7 +31,7 @@ to prepare this test
 
 * Convert the blinky.bin to a C header file that will be included in the test.
 
-        xxd -g4 -i blinky.bin > ../blinky-bin.h
+        xxd -g4 -i blinky.bin > ../blinky-bin-rp2040.h
 
 The blinky binary will be loaded into the base of the flash (XIP) and then 
 a processor reset will be invoked.

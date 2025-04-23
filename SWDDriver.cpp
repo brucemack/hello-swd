@@ -8,7 +8,8 @@ namespace kc1fsz {
 static const char* SELECTION_ALERT = "0100_1001_1100_1111_1001_0000_0100_0110_1010_1001_1011_0100_1010_0001_0110_0001_"
                                      "1001_0111_1111_0101_1011_1011_1100_0111_0100_0101_0111_0000_0011_1101_1001_1000";
 
-static const char* ACTIVATION_CODE = "0000_0101_1000_1111";
+//static const char* ACTIVATION_CODE = "0000_0101_1000_1111";
+static const char* ACTIVATION_CODE = "0101_1000";
 
 #define DAP_ADDR_CORE0 (0x01002927)
 
@@ -47,8 +48,12 @@ int SWDDriver::connect() {
     // between the two protocols."
 
     // Selection alert (128 bits)
-    writeSelectionAlert();   
-    // ARM Coresight activation code
+    writeSelectionAlert();
+
+    // RP2350 datasheet: 
+    writeBitPattern("0000");
+
+    // ARM Coresight activation code (0x1a, LSB first)
     writeActivationCode();
 
     // Here is where we start to follow the protocol described
@@ -72,7 +77,12 @@ int SWDDriver::connect() {
     writeBitPattern("00000000");
 
     // For ease of tracing
-    _delayPeriod();
+    //_delayPeriod();
+
+    // ===============================================================
+    // NOTE: This part is only relevant to the RP2040.  The RP2350
+    // doesn't use a multi-drop DP architecture.
+    // ===============================================================
 
     // DP TARGETSEL, DP for Core 0.  We ignore the ACK here!
     // At this point there are multiple cores listening on the 
@@ -90,9 +100,11 @@ int SWDDriver::connect() {
     // Section 2.3.4.2) is available which is connected to system control 
     // features. Default addresses of each debug port are given below:
     //
-    // Core 0   : 0x01002927
-    // Core 1   : 0x11002927
-    // Rescue DP: 0xf1002927
+    // For RP2040 we use:
+    //
+    //   Core 0   : 0x01002927
+    //   Core 1   : 0x11002927
+    //   Rescue DP: 0xf1002927
     // 
     // The Instance IDs (top 4 bits of ID above) can be changed via a sysconfig 
     // register which may be useful in a multichip application. However note 
@@ -101,8 +113,16 @@ int SWDDriver::connect() {
     if (const auto r = writeDP(0b1100, DAP_ADDR_CORE0, true); r != 0) 
         return -1;
 
+    // ===============================================================
+    // RP2350 NOTE: In the next few reads/writes we are assuming that 
+    // register address 0x0 is the DPIDR register and register address 
+    // 0x4 is the CTRL/STAT register.  This is consistent with 
+    // DPBANKSEL=0x0 as per the DP SELECT register described in section
+    // B2.2.11 in the ADIv6.0 specification document.
+    // ===============================================================
+
     // Read from the ID CODE register
-    if (const auto r = readDP(0b0000); r.has_value()) {
+    if (const auto r = readDP(0x0); r.has_value()) {
         // Good outcome
         printf("IDCODE is %08X\n", *r);
     }
@@ -112,21 +132,22 @@ int SWDDriver::connect() {
     }
 
     // Abort (in case anything is in process)
-    if (const auto r = writeDP(0b0000, 0x0000001e); r != 0)
+    if (const auto r = writeDP(0x0, 0x0000001e); r != 0)
         return -3;
 
     // Set AP and DP bank 0
     if (const auto r = writeDP(0b1000, 0x00000000); r != 0)
         return -4;
 
+    // Write into CTRL/STAT to power up.
     // Power up CSYSPWRUPREQ=1, CDBGPWRUPREQ=1, and ORUNDETECT=1
-    if (const auto r = writeDP(0b0100, 0x50000001); r != 0)
+    if (const auto r = writeDP(0x4, 0x50000001); r != 0)
         return -5;
 
     // TODO: POLLING FOR POWER UP NEEDED?
 
-    // Read DP CTRLSEL and check for CSYSPWRUPACK and CDBGPWRUPACK
-    if (const auto r = readDP(0b0100); !r.has_value()) {
+    // Read DP CTRL/SEL and check for CSYSPWRUPACK and CDBGPWRUPACK
+    if (const auto r = readDP(0x4); !r.has_value()) {
         return -6;
     } else {
         // TODO: MAKE SURE THIS STILL WORKS
@@ -134,6 +155,8 @@ int SWDDriver::connect() {
             return -7;
     }
 
+    // For RP2040:
+    //
     // DP SELECT - Set AP bank F, AP 0
     // [31:24] AP Select
     // [7:4]   AP Bank Select (the active four-word bank)
@@ -154,7 +177,7 @@ int SWDDriver::connect() {
 
     // Leave the debug system in the proper state (post-connect)
 
-    // DP SELECT - Set AP and DP bank 0
+    // DP SELECT - Set AP 0, AP bank 0, and DP bank 0
     if (const auto r = writeDP(0x8, 0x00000000); r != 0)
         return -11;
 
