@@ -130,9 +130,7 @@ int SWDDriver::connect() {
         return -6;
     } else {
         // TODO: MAKE SURE THIS STILL WORKS
-        if ((*r & 0x80000000) && (*r & 0x20000000))
-            return 0;
-        else
+        if (!((*r & 0x80000000) && (*r & 0x20000000)))
             return -7;
     }
 
