@@ -392,10 +392,9 @@ int flash_and_verify(SWDDriver& swd) {
             return -1;
     }
 
+    // Get back into normal flash reading mode
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_flush_cache_func, 0, 0, 0, 0); !r.has_value())
         return -1;
-
-    // Get back into normal flash reading mode
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_enter_cmd_xip_func, 0, 0, 0, 0); !r.has_value())
         return -1;
 
@@ -471,21 +470,6 @@ int prog_1() {
     // TODO: Figure out what to poll for to avoid this race condition
     sleep_ms(10);
     
-    // IS THIS NEEDED?
-    // DP SELECT - Set AP and DP bank 0
-    //if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0) 
-    //    return -10;
-
-    // IS THIS NEEDED?
-    // Write to the AP Control/Status Word (CSW), auto-increment, word values
-    //
-    // 1010_0010_0000_0000_0001_0010
-    // 
-    // [5:4] 01  : Auto Increment set to "Increment Single," which increments by the size of the access.
-    // [2:0] 010 : Size of the access to perform, which is 32 bits in this case. 
-    //if (const auto r = swd.writeAP(0b0000, 0x22000012); r != 0)
-    //    return -11;
-
     // Here's where the actual flash happens
     if (const int rc = flash_and_verify(swd); rc != 0) {
         printf("Flashed failed\n");

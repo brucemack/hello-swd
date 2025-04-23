@@ -309,18 +309,17 @@ int SWDDriver::pollREGRDY(unsigned int timeoutUs) {
 
 std::expected<uint32_t, int> SWDDriver::_read(bool isAP, uint8_t addr) {
 
-    // The only variable bits are the address and the DP/AP flag
-    unsigned int ones = 0;
+    // Parity calculation. The only variable bits are the address and 
+    // the DP/AP flag. Start with read flag.
+    unsigned int ones = 1;
     if (addr & 0b0100)
         ones++;
     if (addr & 0b1000)
         ones++;
     if (isAP)
         ones++;
-    // Read flag
-    ones++;
 
-    // Start
+    // Start bit
     writeBit(true);
     // 0=DP, 1=AP
     writeBit(isAP);
@@ -332,13 +331,14 @@ std::expected<uint32_t, int> SWDDriver::_read(bool isAP, uint8_t addr) {
     // This system uses even parity, so an extra one should be 
     // added only if the rest of the count is odd.
     writeBit((ones % 2) == 1);
-    // Stop
+    // Stop bit
     writeBit(false);
 
-    // Park 
+    // Park bit
     writeBit(true);
     _releaseDIO();
 
+    // IMPORTANT: For ease of display only!
     _delayPeriod();
 
     // One cycle turnaround 
@@ -347,7 +347,7 @@ std::expected<uint32_t, int> SWDDriver::_read(bool isAP, uint8_t addr) {
     // IMPORTANT: For ease of display only!
     _delayPeriod();
 
-    // Read three bits (LSB first)
+    // Read three acknowledgment bits (LSB first)
     uint8_t ack = 0;
     if (readBit()) ack |= 1;
     if (readBit()) ack |= 2;
@@ -387,7 +387,6 @@ std::expected<uint32_t, int> SWDDriver::_read(bool isAP, uint8_t addr) {
 
     return data;
 }
-
 
 int SWDDriver::_write(bool isAP, uint8_t addr, uint32_t data, bool ignoreAck) {
 
