@@ -172,7 +172,7 @@ std::expected<uint32_t, int> call_function(SWDDriver& swd,
     if (swd.pollREGRDY() != 0)
         return std::unexpected(-3);
 
-    // Write the arguments in the r0-r3 registers
+    // Write the argumens in the r0-r3 registers
 
     if (const auto r = swd.writeWordViaAP(ARM_DCRDR, a0); r != 0)
         return std::unexpected(-4);
@@ -213,7 +213,7 @@ std::expected<uint32_t, int> call_function(SWDDriver& swd,
         return std::unexpected(-9);
 
     // Set xPSR to 0x01000000 (ESPR.T=1).
-    // NOTE: I DON'T UNDERSTANT THIS.  IS IT NEEDED?
+    // NOTE: I DON'T UNDERSTANT THIS
     if (const auto r = swd.writeWordViaAP(ARM_DCRDR, 0x01000000); r != 0)
         return std::unexpected(-10);
     if (const auto r = swd.writeWordViaAP(ARM_DCRSR, 0x00010010); r != 0) 
@@ -247,7 +247,7 @@ std::expected<uint32_t, int> call_function(SWDDriver& swd,
     if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b001 | 0b1000); r != 0)
         return std::unexpected(-13);
 
-    // Poll DHCSR, looking for the debug halt status
+    // Poll, looking for the debug halt status
     while (true) {
         if (const auto r = swd.readWordViaAP(0xe000edf0); !r.has_value()) {
             return std::unexpected(-14);
@@ -273,14 +273,9 @@ std::expected<uint32_t, int> call_function(SWDDriver& swd,
 
 int flash_and_verify(SWDDriver& swd) {
 
-    // Move VTOR to SRAM
-    if (const auto r = swd.writeWordViaAP(0xe000ed08, 0x20000000); r != 0)
-        return -12;
-
-    // IS THIS NEEDED?
     // DP SELECT - Set AP and DP bank 0
-    //if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0)
-    //    return -1;
+    if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0)
+        return -1;
 
     // ----- Get the ROM function locations -----------------------------------
 
@@ -390,12 +385,13 @@ int flash_and_verify(SWDDriver& swd) {
         if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_range_program_func, 
             page * page_size, ram_workarea, page_size, 0); !r.has_value())
             return -1;
+        if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_flush_cache_func, 0, 0, 0, 0); !r.has_value())
+            return -1;
     }
 
-    if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_flush_cache_func, 0, 0, 0, 0); !r.has_value())
-        return -1;
-
     // Get back into normal flash reading mode
+    //if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_flush_cache_func, 0, 0, 0, 0); !r.has_value())
+    //    return -1;
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_enter_cmd_xip_func, 0, 0, 0, 0); !r.has_value())
         return -1;
 
@@ -471,20 +467,22 @@ int prog_1() {
     // TODO: Figure out what to poll for to avoid this race condition
     sleep_ms(10);
     
-    // IS THIS NEEDED?
     // DP SELECT - Set AP and DP bank 0
-    //if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0) 
-    //    return -10;
+    if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0) 
+        return -10;
 
-    // IS THIS NEEDED?
     // Write to the AP Control/Status Word (CSW), auto-increment, word values
     //
     // 1010_0010_0000_0000_0001_0010
     // 
     // [5:4] 01  : Auto Increment set to "Increment Single," which increments by the size of the access.
     // [2:0] 010 : Size of the access to perform, which is 32 bits in this case. 
-    //if (const auto r = swd.writeAP(0b0000, 0x22000012); r != 0)
-    //    return -11;
+    if (const auto r = swd.writeAP(0b0000, 0x22000012); r != 0)
+        return -11;
+
+    // Move VTOR to SRAM
+    if (const auto r = swd.writeWordViaAP(0xe000ed08, 0x20000000); r != 0)
+        return -12;
 
     // Here's where the actual flash happens
     if (const int rc = flash_and_verify(swd); rc != 0) {
