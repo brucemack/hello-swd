@@ -68,7 +68,7 @@ int SWDDriver::connect() {
     //    the selected target. The target response must be ignored. See Figure 
     //    B4-9 on page B4-124.
     // 3. Read from the DP register 0x0, DPIDR, to verify that the target 
-    // has been successfully selected.
+    //    has been successfully selected.
 
     // Line reset
     writeLineReset();
@@ -110,6 +110,8 @@ int SWDDriver::connect() {
     // register which may be useful in a multichip application. However note 
     // that ID=0xf is reserved for the internal Rescue DP (see Section 2.3.4.2).
     //
+
+    // Needed for RP2040
     if (const auto r = writeDP(0b1100, DAP_ADDR_CORE0, true); r != 0) 
         return -1;
 
@@ -135,7 +137,12 @@ int SWDDriver::connect() {
     if (const auto r = writeDP(0x0, 0x0000001e); r != 0)
         return -3;
 
+    //const uint32_t ap_base = 0x00002000;
+
+    // For RP2040:
+    //
     // Set AP and DP bank 0
+    // (Not completely sure why this is needed)
     if (const auto r = writeDP(0b1000, 0x00000000); r != 0)
         return -4;
 
@@ -163,6 +170,12 @@ int SWDDriver::connect() {
     if (const auto r = writeDP(0x8, 0x000000f0); r != 0)
         return -8;
 
+    // For RP2350:
+    //
+    // DP SELECT - Set AP bank x02000 + 0xf0
+    //if (const auto r = writeDP(0x8, ap_base | 0xf0); r != 0)
+    //    return -8;
+
     // Read AP addr 0xFC. [7:4] bank address set previously, [3:0] set here.
     // 0xFC is the AP identification register.
     // The actual data comes back during the DP RDBUFF read
@@ -177,9 +190,17 @@ int SWDDriver::connect() {
 
     // Leave the debug system in the proper state (post-connect)
 
+    // For RP2040:
+    //
     // DP SELECT - Set AP 0, AP bank 0, and DP bank 0
     if (const auto r = writeDP(0x8, 0x00000000); r != 0)
         return -11;
+
+    // For RP2350
+    //
+    // DP SELECT - Set AP 0, AP bank 0, and DP bank 0
+    //if (const auto r = writeDP(0x8, ap_base); r != 0)
+    //    return -11;
 
     // Write to the AP Control/Status Word (CSW), auto-increment, 32-bit 
     // transfer size.

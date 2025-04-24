@@ -274,16 +274,15 @@ std::expected<uint32_t, int> call_function(SWDDriver& swd,
     }
 }
 
+/**
+ * NOTE: It is assumed that the AP is selected and AP bank 0 
+ * is selected before calling this function!
+ */
 int flash_and_verify(SWDDriver& swd) {
 
     // Move VTOR to SRAM
     if (const auto r = swd.writeWordViaAP(0xe000ed08, 0x20000000); r != 0)
         return -12;
-
-    // IS THIS NEEDED?
-    // DP SELECT - Set AP and DP bank 0
-    //if (const auto r = swd.writeDP(0x8, 0x00000000); r != 0)
-    //    return -1;
 
     // ----- Get the ROM function locations -----------------------------------
 
@@ -526,7 +525,7 @@ int main(int, const char**) {
 
     int rc = prog_1();
     if (rc != 0)
-        printf("Programming failed\n");
+        printf("Programming failed %d\n", rc);
     else 
         printf("Programming succeeded\n");
 
