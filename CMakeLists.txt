@@ -9,24 +9,6 @@ set(HOME $ENV{HOME})
 pico_sdk_init()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0")
 
-# ----- main ------------------------------------------------------------------
-
-add_executable(main
-  main.cpp
-  SWDDriver.cpp
-)
-
-pico_enable_stdio_usb(main 1)
-target_link_libraries(main pico_stdlib hardware_i2c)
-
-add_executable(prog-1
-  prog-1.cpp
-  SWDDriver.cpp
-)
-
-pico_enable_stdio_usb(prog-1 1)
-target_link_libraries(prog-1 pico_stdlib hardware_i2c)
-
 # ----- blinky ----------------------------------------------------------------
 # Useful for keeping a processor visibly busy when testing debuggers.
 
@@ -36,6 +18,22 @@ add_executable(blinky
 
 pico_enable_stdio_usb(blinky 1)
 target_link_libraries(blinky pico_stdlib)
+pico_add_extra_outputs(blinky)
+
+# ----- main -----
+
+add_executable(main
+  prog-1.cpp  
+  kc1fsz-tools-cpp/src/Common.cpp
+  kc1fsz-tools-cpp/src/rp2040/SWDDriver.cpp
+)
+
+target_include_directories(main PRIVATE 
+  kc1fsz-tools-cpp/include
+)
+
+pico_enable_stdio_usb(main 1)
+target_link_libraries(main pico_stdlib hardware_i2c)
 
 # ----- flash-test-1 ----------------------------------------------------------
 

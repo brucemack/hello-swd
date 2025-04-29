@@ -6,6 +6,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "pico/stdlib.h"
 #include "pico/flash.h"
 #include "pico/bootrom.h"
@@ -17,14 +18,16 @@
 #include "blinky-bin-rp2040.h"
 //#include "blinky-bin-rp2350.h"
 
-#include "SWDDriver.h"
+#include "kc1fsz-tools/rp2040/SWDDriver.h"
 
 using namespace kc1fsz;
 
 const uint LED_PIN = 25;
 
-#define CLK_PIN (2)
-#define DIO_PIN (3)
+//#define CLK_PIN (2)
+//#define DIO_PIN (3)
+#define CLK_PIN (16)
+#define DIO_PIN (17)
 
 static uint32_t rom_table_code(char c1, char c2) {
   return (c2 << 8) | c1;
@@ -274,11 +277,36 @@ std::expected<uint32_t, int> call_function(SWDDriver& swd,
     }
 }
 
+int reset_into_debug(SWDDriver& swd) {
+
+    // Enable debug mode and halt
+    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b1011); r != 0) 
+        return -7;
+
+    // Set DEMCR.VC_CORERESET=1 so that we come up in debug mode after reset
+    // (i.e. vector catch)
+    if (const auto r = swd.writeWordViaAP(0xE000EDFC, 0x00000001); r != 0)
+        return -8;
+
+    // Trigger a reset by writing SYSRESETREQ to NVIC.AIRCR.
+    if (const auto r = swd.writeWordViaAP(0xe000ed0c, 0x05fa0004); r != 0)
+        return -9;
+
+    // ???
+    // TODO: Figure out what to poll for to avoid this race condition
+    sleep_ms(10);
+
+    return 0;
+}
+
 /**
  * NOTE: It is assumed that the AP is selected and AP bank 0 
  * is selected before calling this function!
+ * 
+ * @param offset Offset from the start of FLASH.  So 0 means start of flash.
+ * @param image_bin_len Must be a multiple of 4096!
  */
-int flash_and_verify(SWDDriver& swd) {
+int flash_and_verify(SWDDriver& swd, uint32_t offset, const uint8_t* image_bin, uint32_t image_bin_len) {
 
     // Move VTOR to SRAM
     if (const auto r = swd.writeWordViaAP(0xe000ed08, 0x20000000); r != 0)
@@ -352,8 +380,8 @@ int flash_and_verify(SWDDriver& swd) {
 
     // Take size of binary and pad it up to a 4K boundary
     const unsigned int page_size = 4096;
-    unsigned int whole_pages = blinky_bin_len / page_size;
-    unsigned int remainder = blinky_bin_len % page_size;
+    unsigned int whole_pages = image_bin_len / page_size;
+    unsigned int remainder = image_bin_len % page_size;
     // Make sure we are using full pages
     if (remainder)
         whole_pages++;
@@ -362,7 +390,7 @@ int flash_and_verify(SWDDriver& swd) {
     unsigned int buf_words = buf_len / 4;
     uint8_t* buf = (uint8_t*)malloc(buf_len); 
     memset(buf, 0, buf_len);
-    memcpy(buf, blinky_bin, blinky_bin_len);
+    memcpy(buf, image_bin, image_bin_len);
 
     const unsigned int ram_workarea = 0x20000100;     
     printf("Programing %u bytes ...\n", buf_len);
@@ -374,7 +402,7 @@ int flash_and_verify(SWDDriver& swd) {
         return -1;
 
     // Erase everything using the largest block size possible
-    if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_range_erase_func, 0, buf_len, 1 << 16, 0xd8); !r.has_value())
+    if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_range_erase_func, offset, buf_len, 1 << 16, 0xd8); !r.has_value())
         return -1;
     if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_flush_cache_func, 0, 0, 0, 0); !r.has_value())
         return -1;
@@ -390,7 +418,7 @@ int flash_and_verify(SWDDriver& swd) {
         
         // Flash the page from RAM -> FLASH
         if (const auto r = call_function(swd, rom_debug_trampoline_func, rom_flash_range_program_func, 
-            page * page_size, ram_workarea, page_size, 0); !r.has_value())
+            offset + page * page_size, ram_workarea, page_size, 0); !r.has_value())
             return -1;
     }
 
@@ -412,7 +440,7 @@ int flash_and_verify(SWDDriver& swd) {
             return -1;
         
         uint32_t ram_ptr = ram_workarea;
-        uint32_t flash_ptr = 0x10000000 + (page * page_size);
+        uint32_t flash_ptr = 0x10000000 + offset + (page * page_size);
         
         for (unsigned int i = 0; i < page_size / 4; i++) {
 
@@ -453,27 +481,11 @@ int prog_1() {
 
     printf("Connect is good with APID %08X\n", swd.getAPID());
    
-    // ----- RESET ------------------------------------------------------------
-
-    // Enable debug mode and halt
-    if (const auto r = swd.writeWordViaAP(0xe000edf0, 0xa05f0000 | 0b1011); r != 0) 
-        return -7;
-
-    // Set DEMCR.VC_CORERESET=1 so that we come up in debug mode after reset
-    // (i.e. vector catch)
-    if (const auto r = swd.writeWordViaAP(0xE000EDFC, 0x00000001); r != 0)
-        return -8;
-
-    // Trigger a reset by writing SYSRESETREQ to NVIC.AIRCR.
-    if (const auto r = swd.writeWordViaAP(0xe000ed0c, 0x05fa0004); r != 0)
-        return -9;
-
-    // ???
-    // TODO: Figure out what to poll for to avoid this race condition
-    sleep_ms(10);
+    if (const int rc = reset_into_debug(swd); rc != 0) {
+        return -200 + rc;
+    }
     
-    // Here's where the actual flash happens
-    if (const int rc = flash_and_verify(swd); rc != 0) {
+    if (const int rc = flash_and_verify(swd, 0, blinky_bin, blinky_bin_len); rc != 0) {
         printf("Flashed failed\n");
         return -100 + rc;
     }
