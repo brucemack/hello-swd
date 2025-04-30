@@ -300,15 +300,21 @@ int reset_into_debug(SWDDriver& swd) {
 }
 
 /**
- * NOTE: It is assumed that the AP is selected and AP bank 0 
- * is selected before calling this function!
+ * Takes a binary image and flashes it at the specified offset.
+ * 
+ * NOTES:
+ * - It is assumed that the SWD is initialize, the correct AP is selected 
+ *   and AP bank 0 is selected before calling this function!
+ * - The image must be a multiple of 4096 bytes.
  * 
  * @param offset Offset from the start of FLASH.  So 0 means start of flash.
  * @param image_bin_len Must be a multiple of 4096!
  */
 int flash_and_verify(SWDDriver& swd, uint32_t offset, const uint8_t* image_bin, uint32_t image_bin_len) {
 
-    // Move VTOR to SRAM
+    assert(image_bin_len % 4096 == 0);
+
+    // Move VTOR to SRAM in preparation 
     if (const auto r = swd.writeWordViaAP(0xe000ed08, 0x20000000); r != 0)
         return -12;
 
