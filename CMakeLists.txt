@@ -25,6 +25,7 @@ pico_add_extra_outputs(blinky)
 add_executable(main
   prog-1.cpp  
   kc1fsz-tools-cpp/src/Common.cpp
+  kc1fsz-tools-cpp/src/SWDUtils.cpp
   kc1fsz-tools-cpp/src/rp2040/SWDDriver.cpp
 )
 
